@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Ticket Logger - Users List')"></head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+<header th:replace="fragments/header :: header"></header>
+<main class="list-page">
+    <div class="list-card-users">
+        <h1 th:text="#{msg.user-list.title}" class="mb-4">Listado de Usuarios</h1>
+        <!-- Botón de agregar -->
+        <a th:href="@{/users/new}" class="btn btn-success mb-3"><i
+                class="bi bi-person-plus-fill me-2"></i> <span
+                th:text="#{msg.user-list.add}">Agregar Nuevo Usuario</span> </a> <!-- Mensaje de error -->
+        <div th:if="${errorMessage}" class="alert alert-danger text-center mb-3" th:text="${errorMessage}"></div>
+        <!-- Tabla con scroll horizontal si es necesario -->
+        <div style="overflow-x:auto;">
+            <table class="table table-striped table-bordered table-hover align-middle text-center"
+                   style="min-width:1200px;">
+                <thead class="table-dark">
+                <tr>
+                    <th style="width:5%;" th:text="#{msg.user-list.id}">ID</th>
+                    <th style="width:15%;" th:text="#{msg.user-list.username}">Usuario</th>
+                    <th style="width:15%;" th:text="#{msg.user-list.passwordHash}">Contraseña</th>
+                    <th style="width:7%;" th:text="#{msg.user-list.active}">Activo</th>
+                    <th style="width:10%;" th:text="#{msg.user-list.accountNonLocked}">No Bloqueada</th>
+                    <th style="width:10%;" th:text="#{msg.user-list.lastPasswordChange}">Último Cambio</th>
+                    <th style="width:10%;" th:text="#{msg.user-list.passwordExpiresAt}">Expira En</th>
+                    <th style="width:8%;" th:text="#{msg.user-list.failedLoginAttempts}">Intentos</th>
+                    <th style="width:8%;" th:text="#{msg.user-list.emailVerified}">Correo Verificado</th>
+                    <th style="width:8%;" th:text="#{msg.user-list.mustChangePassword}">Debe Cambiar</th>
+                    <th style="width:10%;" th:text="#{msg.user-list.actions}">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${listUsers}">
+                    <td th:text="${user.id}"></td>
+                    <td th:text="${user.username}"></td>
+                    <td class="text-break" style="max-width:180px;"
+                        th:text="${#strings.abbreviate(user.passwordHash,25)}"></td>
+                    <td><span class="badge rounded-pill px-3 py-2"
+                              th:text="${user.active} ? #{msg.user-list.yes} : #{msg.user-list.no}"
+                              th:classappend="${user.active} ? 'bg-success' : 'bg-danger'"></span></td>
+                    <td><span class="badge rounded-pill px-3 py-2"
+                              th:text="${user.accountNonLocked} ? #{msg.user-list.yes} : #{msg.user-list.no}"
+                              th:classappend="${user.accountNonLocked} ? 'bg-success' : 'bg-danger'"></span></td>
+                    <td th:text="${#temporals.format(user.lastPasswordChange,'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${#temporals.format(user.passwordExpiresAt,'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${user.failedLoginAttempts}"></td>
+                    <td><span class="badge rounded-pill px-3 py-2"
+                              th:text="${user.emailVerified} ? #{msg.user-list.yes} : #{msg.user-list.no}"
+                              th:classappend="${user.emailVerified} ? 'bg-success' : 'bg-warning text-dark'"></span>
+                    </td>
+                    <td><span class="badge rounded-pill px-3 py-2"
+                              th:text="${user.mustChangePassword} ? #{msg.user-list.yes} : #{msg.user-list.no}"
+                              th:classappend="${user.mustChangePassword} ? 'bg-warning text-dark' : 'bg-secondary'"></span>
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2 flex-wrap"><a
+                                th:href="@{/users/edit(id=${user.id})}" class="btn btn-primary btn-sm"
+                                th:text="#{msg.user-list.edit}">Editar</a>
+                            <form th:action="@{/users/delete}" method="post" class="d-inline"><input type="hidden"
+                                                                                                     name="id"
+                                                                                                     th:value="${user.id}"/>
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                        th:onclick="|return confirm('#{msg.user-list.confirm}');|"
+                                        th:text="#{msg.user-list.delete}">Eliminar
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div> <!-- Enlace de volver --> <a th:href="@{/}" class="btn btn-secondary"
+                                            th:text="#{msg.region-list.returnback}"> Volver al inicio </a></div>
+</main>
+<footer th:replace="fragments/footer :: footer"></footer>
+<div th:replace="fragments/scripts :: scripts"></div> <!-- Estilos comunes para listas -->
+
+</body>
+</html>

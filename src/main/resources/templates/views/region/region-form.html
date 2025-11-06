@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head ('Ticket Logger - Edit Region')"></head>
+
+<body class="d-flex flex-column h-100">
+
+<!-- Insertar el fragmento del header -->
+<header th:replace="fragments/header :: header"></header>
+
+<!-- Contenido dinámico -->
+<main class="form-page">
+    <div class="form-card">
+
+        <br><br>
+        <!-- Título con i18n -->
+        <h1 th:text="${region.code == null} ? #{msg.region-form.add} : #{msg.region-form.edit}">
+            Nueva Comunidad Autónoma
+        </h1>
+
+        <!-- Mensaje de error -->
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+        <!-- Formulario -->
+        <form th:action="${region.code == null} ? @{/regions/insert} : @{/regions/update}"
+              th:object="${region}" method="post" class="mt-3">
+            <input type="hidden" th:field="*{id}"/>
+
+            <!-- Código -->
+            <div class="mb-3">
+                <label for="code" class="form-label" th:text="#{msg.region-form.code}">Código</label>
+                <input type="text" th:field="*{code}" id="code" class="form-control"
+                       th:placeholder="#{msg.region-form.code}" />
+                <div th:if="${#fields.hasErrors('code')}" class="text-danger" th:errors="*{code}"></div>
+            </div>
+
+            <!-- Nombre -->
+            <div class="mb-3">
+                <label for="name" class="form-label" th:text="#{msg.region-form.name}">Nombre</label>
+                <input type="text" th:field="*{name}" id="name" class="form-control"
+                       th:placeholder="#{msg.region-form.name}" />
+                <div th:if="${#fields.hasErrors('name')}" class="text-danger" th:errors="*{name}"></div>
+            </div>
+
+            <!-- Botón de submit -->
+            <button type="submit" class="btn btn-primary"
+                    th:text="${region.code == null} ? #{msg.region-form.create} : #{msg.region-form.update}">
+                Crear
+            </button>
+
+            <!-- Enlace de volver -->
+            <a th:href="@{/regions}" class="btn btn-secondary" th:text="#{msg.region-form.returnback}">
+                Volver a la lista
+            </a>
+
+        </form>
+
+    </div>
+</main>
+
+<!-- Insertar el fragmento del footer -->
+<footer th:replace="fragments/footer :: footer"></footer>
+
+<div th:replace="fragments/scripts :: scripts"></div>
+
+</body>
+</html>
