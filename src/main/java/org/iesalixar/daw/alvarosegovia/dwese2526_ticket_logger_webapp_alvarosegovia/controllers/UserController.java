@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -31,6 +32,9 @@ public class UserController {
 
     @Autowired
     private MessageSource messageSource;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Lista todos los usuarios y los pasa al modelo para su visualización.
@@ -109,6 +113,7 @@ public class UserController {
                              Locale locale) {
         logger.info("Insertando nuevo usuario con nombre {}", user.getUsername());
         try {
+
             if (result.hasErrors()) {
                 return "views/user/user-form";
             }
@@ -118,6 +123,7 @@ public class UserController {
                 redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
                 return "redirect:/users/new";
             }
+            user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
             userDAO.insertUser(user);
             logger.info("Usuario {} insertado con éxito.", user.getUsername());
         } catch (Exception e) {
@@ -152,6 +158,10 @@ public class UserController {
                 String errorMessage = messageSource.getMessage("msg.user-controller.update.usernameExist", null, locale);
                 redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
                 return "redirect:/users/edit?id=" + user.getId();
+            }
+            // Hashear la contraseña solo si se ha proporcionado una nueva
+            if (user.getPasswordHash() != null && !user.getPasswordHash().isBlank()) {
+                user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
             }
             userDAO.updateUser(user);
             logger.info("Usuario con ID {} actualizado con éxito.", user.getId());

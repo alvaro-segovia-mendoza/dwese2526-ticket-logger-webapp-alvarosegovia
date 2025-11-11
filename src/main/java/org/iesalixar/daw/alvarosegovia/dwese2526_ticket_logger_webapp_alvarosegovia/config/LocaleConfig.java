@@ -3,6 +3,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -62,4 +64,28 @@ public class LocaleConfig implements WebMvcConfigurer {
         registry.addInterceptor(localeChangeInterceptor());
         logger.info("LocaleChangeInterceptor registrado en el InterceptorRegistry");
     }
+
+    /**
+     * Bean de Spring que proporciona un {@link PasswordEncoder} para hashear contraseñas.
+     * <p>
+     * Se utiliza {@link BCryptPasswordEncoder}, que aplica el algoritmo bcrypt para
+     * almacenar contraseñas de forma segura. Este bean se puede inyectar en controladores
+     * o servicios para codificar y verificar contraseñas.
+     * <p>
+     * Uso típico:
+     * <pre>
+     * {@code
+     * String hashed = passwordEncoder.encode(plainPassword);
+     * boolean matches = passwordEncoder.matches(plainPassword, hashed);
+     * }
+     * </pre>
+     *
+     * @return una instancia de {@link BCryptPasswordEncoder} que implementa {@link PasswordEncoder}
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        logger.info("PasswordEncoder (BCrypt) configurado");
+        return new BCryptPasswordEncoder();
+    }
+
 }

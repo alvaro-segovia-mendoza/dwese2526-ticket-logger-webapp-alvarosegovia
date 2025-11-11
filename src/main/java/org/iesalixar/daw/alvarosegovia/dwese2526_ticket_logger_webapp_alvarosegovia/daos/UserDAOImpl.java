@@ -89,13 +89,13 @@ public class UserDAOImpl implements UserDAO {
         int rowsAffected = jdbcTemplate.update(sql,
                 user.getUsername(),
                 user.getPasswordHash(),
-                user.isActive(),
-                user.isAccountNonLocked(),
+                user.getActive(),
+                user.getAccountNonLocked(),
                 user.getLastPasswordChange(),
                 user.getPasswordExpiresAt(),
                 user.getFailedLoginAttempts(),
-                user.isEmailVerified(),
-                user.isMustChangePassword()
+                user.getEmailVerified(),
+                user.getMustChangePassword()
         );
         logger.info("Inserted user. Rows affected: {}", rowsAffected);
     }
@@ -127,13 +127,13 @@ public class UserDAOImpl implements UserDAO {
         int rowsAffected = jdbcTemplate.update(sql,
                 user.getUsername(),
                 user.getPasswordHash(),
-                user.isActive(),
-                user.isAccountNonLocked(),
+                user.getActive(),
+                user.getAccountNonLocked(),
                 user.getLastPasswordChange(),
                 user.getPasswordExpiresAt(),
                 user.getFailedLoginAttempts(),
-                user.isEmailVerified(),
-                user.isMustChangePassword(),
+                user.getEmailVerified(),
+                user.getMustChangePassword(),
                 user.getId()
         );
         logger.info("Updated user. Rows affected: {}", rowsAffected);
