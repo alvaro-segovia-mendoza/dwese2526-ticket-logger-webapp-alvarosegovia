@@ -11,6 +11,10 @@ import org.springframework.stereotype.Repository;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * Implementación de {@link RegionDAO} usando {@link JdbcTemplate}.
+ * Gestiona las operaciones CRUD sobre la tabla 'regions',
+ */
 @Repository // Anotación que marca esta clase como un componente que gestiona la persistencia.
 public class RegionDAOImpl implements RegionDAO {
 
@@ -114,7 +118,6 @@ public class RegionDAOImpl implements RegionDAO {
      * @param id   el ID de la región a excluir de la verficación.
      * @return true si es una región con el código ya existe (y no es la región con el ID dado),
      *         false de lo contrario.
-     * @throws SQLException
      */
     @Override
     public boolean existsRegionByCodeAndNotId(String code, Long id) {
@@ -123,6 +126,16 @@ public class RegionDAOImpl implements RegionDAO {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, code.toUpperCase(), id);
         boolean exists = count != null && count > 0;
         logger.info("Region with code: {} exists excluding id {}: {}", code, id, exists);
+        return exists;
+    }
+
+    @Override
+    public boolean existsRegionByName(String name) {
+        logger.info("Checking if region with name: {} exists", name);
+        String sql = "SELECT COUNT(*) FROM regions WHERE UPPER(name) = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, name.toUpperCase());
+        boolean exists = count != null && count > 0;
+        logger.info("Region with name: {} exists: {}", name, exists);
         return exists;
     }
 }

@@ -10,16 +10,16 @@
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <ul class="navbar-nav me-auto mb-2 mb-md-0">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#" th:href="@{/}">Inicio</a>
+                        <a class="nav-link active" aria-current="page" href="#" th:href="@{/}" th:text="#{nav.home}">Inicio</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" th:href="@{/regions}">Comunidades Autónomas</a>
+                        <a class="nav-link" href="#" th:href="@{/regions}" th:text="#{nav.regions}">Comunidades Autónomas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" th:href="@{/provinces}">Provincias</a>
+                        <a class="nav-link" href="#" th:href="@{/provinces}" th:text="#{nav.provinces}">Provincias</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" th:href="@{/users}">Usuarios</a>
+                        <a class="nav-link" href="#" th:href="@{/users}" th:text="#{nav.users}">Usuarios</a>
                     </li>
                 </ul>
                 <!-- Selector de idioma -->

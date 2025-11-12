@@ -36,28 +36,6 @@ public class RegionController {
     private MessageSource messageSource;
 
     /**
-     * Lista todas las regiones y las pasa como atributo al modelo para que sean
-     * accesibles en la vista 'region.html'.
-     *
-     * @param model Objeto del modelo para pasar datos a la vista.
-     * @return El nombre de la plantilla Thymeleaf para renderizar la lista de regiones.
-     */
-    @GetMapping
-    public String listRegions(Model model) {
-        logger.info("Solicitando la lista de todas las regiones...");
-        List<Region> listRegions = null;
-        try {
-            listRegions = regionDAO.listAllRegions();
-            logger.info("Se han cargado {} regiones.",listRegions.size());
-        } catch (Exception e) {
-            logger.error("Error al listar las regiones: {}", e.getMessage());
-            model.addAttribute("errorMessage", "Error al listar las regiones.");
-        }
-        model.addAttribute("listRegions", listRegions); // Pasar la lista de regiones al modelo
-        return "views/region/region-list"; //Nombre de la pantalla Thymeleaf a renderizar
-    }
-
-    /**
      * Muestra el formulario para crear una nueva región.
      *
      * @param model Modelo para pasar datos a la vista.
@@ -98,6 +76,28 @@ public class RegionController {
     }
 
     /**
+     * Lista todas las regiones y las pasa como atributo al modelo para que sean
+     * accesibles en la vista 'region.html'.
+     *
+     * @param model Objeto del modelo para pasar datos a la vista.
+     * @return El nombre de la plantilla Thymeleaf para renderizar la lista de regiones.
+     */
+    @GetMapping
+    public String listRegions(Model model) {
+        logger.info("Solicitando la lista de todas las regiones...");
+        List<Region> listRegions = null;
+        try {
+            listRegions = regionDAO.listAllRegions();
+            logger.info("Se han cargado {} regiones.",listRegions.size());
+        } catch (Exception e) {
+            logger.error("Error al listar las regiones: {}", e.getMessage());
+            model.addAttribute("errorMessage", "Error al listar las regiones.");
+        }
+        model.addAttribute("listRegions", listRegions); // Pasar la lista de regiones al modelo
+        return "views/region/region-list"; //Nombre de la pantalla Thymeleaf a renderizar
+    }
+
+    /**
      * Inserta una nueva región en la base de datos.
      *
      * @param region              Objeto que contiene los datos del formulario.
@@ -105,15 +105,23 @@ public class RegionController {
      * @return Redirección a la lista de regiones.
      */
     @PostMapping("/insert")
-    public String insertRegion(@Valid @ModelAttribute("region") Region region, BindingResult result, RedirectAttributes redirectAttributes, Locale locale) {
-        logger.info("Insertando nueva región con código {}", region.getCode());
+    public String insertRegion(@Valid @ModelAttribute("region") Region region,
+                               BindingResult result,
+                               RedirectAttributes redirectAttributes,
+                               Locale locale) {
+        logger.info("Insertando nueva región con código {} y nombre {}", region.getCode(), region.getName());
         try {
             if (result.hasErrors()) {
-                return "region-form";  // Devuelve el formulario para mostrar los errores de validación
+                return "views/region/region-form";
             }
             if (regionDAO.existsRegionByCode(region.getCode())) {
                 logger.warn("El código de la región {} ya existe.", region.getCode());
                 String errorMessage = messageSource.getMessage("msg.region-controller.insert.codeExist", null, locale);
+                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+                return "redirect:/regions/new";
+            } else if (regionDAO.existsRegionByName(region.getName())) {
+                logger.warn("El nombre de la región {} ya existe.", region.getName());
+                String errorMessage = messageSource.getMessage("msg.region-controller.insert.nameExist", null, locale);
                 redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
                 return "redirect:/regions/new";
             }
@@ -148,6 +156,12 @@ public class RegionController {
             if (regionDAO.existsRegionByCodeAndNotId(region.getCode(), region.getId())) {
                 logger.warn("El código de la región {} ya existe para otra región.", region.getCode());
                 String errorMessage = messageSource.getMessage("msg.region-controller.update.codeExist", null, locale);
+                model.addAttribute("errorMessage", errorMessage);
+                return "views/region/region-form"; // Mantener datos y mostrar error
+            }
+            if (regionDAO.existsRegionByName(region.getName())) {
+                logger.warn("El nombre de la región {} ya existe para otra región.", region.getName());
+                String errorMessage = messageSource.getMessage("msg.region-controller.update.nameExist", null, locale);
                 model.addAttribute("errorMessage", errorMessage);
                 return "views/region/region-form"; // Mantener datos y mostrar error
             }

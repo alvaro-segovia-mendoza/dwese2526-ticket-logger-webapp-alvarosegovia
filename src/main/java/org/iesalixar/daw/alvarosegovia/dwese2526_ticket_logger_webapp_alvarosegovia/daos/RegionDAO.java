@@ -13,4 +13,5 @@ public interface RegionDAO {
     Region getRegionById(Long id);
     boolean existsRegionByCode (String code);
     boolean existsRegionByCodeAndNotId(String code, Long id);
+    boolean existsRegionByName(String name);
 }

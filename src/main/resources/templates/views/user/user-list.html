@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head('Ticket Logger - Users List')"></head>
-<body class="d-flex flex-column min-vh-100 bg-light">
+<head th:replace="fragments/head :: head ('Ticket Logger - Users List')"></head>
+
+<body class="d-flex flex-column h-100">
+
+<!-- Insertar el fragmento del header -->
 <header th:replace="fragments/header :: header"></header>
-<main class="list-page">
-    <div class="list-card-users">
+
+<main class="list-page" style="padding-top:100px;">
+    <div class="list-card" style="max-width:1500px">
         <h1 th:text="#{msg.user-list.title}" class="mb-4">Listado de Usuarios</h1>
         <!-- Botón de agregar -->
         <a th:href="@{/users/new}" class="btn btn-success mb-3"><i
