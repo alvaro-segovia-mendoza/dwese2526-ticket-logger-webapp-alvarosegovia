@@ -1,5 +1,10 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.daos;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.*;
+import jakarta.transaction.Transactional;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Region;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,38 +16,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Implementación de {@link UserDAO} que gestiona las operaciones CRUD
- * sobre la tabla 'users' en la base de datos usando {@link JdbcTemplate}.
- * <p>
- * Esta clase incluye métodos para:
- * <ul>
- *     <li>Listar todos los usuarios</li>
- *     <li>Insertar un nuevo usuario</li>
- *     <li>Actualizar un usuario existente</li>
- *     <li>Eliminar un usuario por su ID</li>
- *     <li>Recuperar un usuario por su ID</li>
- *     <li>Verificar existencia de un usuario por nombre de usuario</li>
- * </ul>
- * <p>
- * Además, se encarga de gestionar automáticamente la expiración de la contraseña
- * calculando {@code passwordExpiresAt} a partir de {@code lastPasswordChange}.
- * <p>
- * Se utiliza {@link org.slf4j.Logger} para registrar operaciones importantes.
+ * Implementación de {@link UserDAO}.
+ * Gestiona las operaciones CRUD sobre la tabla 'users'.
  */
-@Repository
+@Repository // Anotación que marca esta clase como un componente que gestiona la persistencia.
+@Transactional
+// Indica que todos los métodos de esta clase deben ejecutarse dentro de una transacción.
+// Si algún método lanza una excepción en tiempo de ejecución, la transacción se revierte automáticamente (rollback).
+// Esto asegura la integridad de los datos: todas las operaciones dentro del método se confirman o se cancelan juntas.
+
 public class UserDAOImpl implements UserDAO {
 
+    // Logger para registrar eventos importantes en el DAO
     private static final Logger logger = LoggerFactory.getLogger(UserDAOImpl.class);
-    private final JdbcTemplate jdbcTemplate;
 
-    /**
-     * Constructor que inyecta {@link JdbcTemplate} para operaciones de base de datos.
-     *
-     * @param jdbcTemplate objeto {@link JdbcTemplate} para acceder a la base de datos
-     */
-    public UserDAOImpl(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * Lista todos los usuarios de la base de datos.
@@ -52,10 +41,75 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public List<User> listAllUsers() {
         logger.info("Listing all users from the database.");
-        String sql = "SELECT * FROM users";
-        List<User> users = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(User.class));
+        String hql = "SELECT u FROM User u";
+        List<User> users = entityManager.createQuery(hql, User.class).getResultList();
         logger.info("Retrieved {} users from the database.", users.size());
         return users;
+    }
+
+    /**
+     * Lista una página de usuarios ordenados por cualquier campo de la entidad User.
+     *
+     * @param page      página actual (0-based)
+     * @param size      número de elementos por página
+     * @param sortField campo por el que se ordenan los resultados
+     * @param sortDir   dirección de ordenación ("asc" o "desc")
+     * @return lista de usuarios para esta página
+     */
+    @Override
+    public List<User> listUsersPage(int page, int size, String sortField, String sortDir) {
+        logger.info("Listing users page={}, size={} from the database. Sort by {} {}", page, size, sortField, sortDir);
+
+        int offset = page * size;
+
+        // 1. Creación de Criteria
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<User> cq = cb.createQuery(User.class);
+        Root<User> root = cq.from(User.class);
+
+        // 2. Determina el campo de ordenación permitido (whitelist)
+        Path<?> sortPath;
+        switch (sortField) {
+            case "id" -> sortPath = root.get("id");
+            case "username" -> sortPath = root.get("username");
+            case "active" -> sortPath = root.get("active");
+            case "accountNonLocked" -> sortPath = root.get("accountNonLocked");
+            case "lastPasswordChange" -> sortPath = root.get("lastPasswordChange");
+            case "passwordExpiresAt" -> sortPath = root.get("passwordExpiresAt");
+            case "failedLoginAttempts" -> sortPath = root.get("failedLoginAttempts");
+            case "emailVerified" -> sortPath = root.get("emailVerified");
+            case "mustChangePassword" -> sortPath = root.get("mustChangePassword");
+            default -> {
+                logger.warn("Unknown sortField '{}', defaulting to 'username'.", sortField);
+                sortPath = root.get("username");
+            }
+        }
+
+        // 3. Dirección de ordenación
+        boolean descending = "desc".equalsIgnoreCase(sortDir);
+        Order order = descending ? cb.desc(sortPath) : cb.asc(sortPath);
+
+        // 4. Aplicar ordenación a la query
+        cq.select(root).orderBy(order);
+
+        // 5. Crear TypedQuery, aplicar paginación y ejecutar
+        return entityManager.createQuery(cq)
+                .setFirstResult(offset)
+                .setMaxResults(size)
+                .getResultList();
+    }
+
+
+    /**
+     * Devuelve el número total de usuarios.
+     *
+     * @return total de usuarios
+     */
+    @Override
+    public long countUsers() {
+        String hql = "SELECT COUNT(u) FROM User u";
+        Long total = entityManager.createQuery(hql, Long.class).getSingleResult();
+        return (total != null) ? total : 0L;
     }
 
     /**
@@ -80,25 +134,12 @@ public class UserDAOImpl implements UserDAO {
         user.setPasswordExpiresAt(user.getLastPasswordChange().plusMonths(3));
         logger.debug("Calculated passwordExpiresAt = {}", user.getPasswordExpiresAt());
 
-        String sql = """
-            INSERT INTO users (username, passwordHash, active, accountNonLocked,
-                               lastPasswordChange, passwordExpiresAt, failedLoginAttempts,
-                               emailVerified, mustChangePassword)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """;
-        int rowsAffected = jdbcTemplate.update(sql,
-                user.getUsername(),
-                user.getPasswordHash(),
-                user.getActive(),
-                user.getAccountNonLocked(),
-                user.getLastPasswordChange(),
-                user.getPasswordExpiresAt(),
-                user.getFailedLoginAttempts(),
-                user.getEmailVerified(),
-                user.getMustChangePassword()
-        );
-        logger.info("Inserted user. Rows affected: {}", rowsAffected);
+        // Persistimos el usuario usando JPA/Hibernate
+        entityManager.persist(user);
+
+        logger.info("Inserted user successfully with ID: {}", user.getId());
     }
+
 
     /**
      * Actualiza un usuario existente en la base de datos.
@@ -117,26 +158,10 @@ public class UserDAOImpl implements UserDAO {
             logger.debug("Recalculated passwordExpiresAt = {}", user.getPasswordExpiresAt());
         }
 
-        String sql = """
-            UPDATE users
-            SET username = ?, passwordHash = ?, active = ?, accountNonLocked = ?,
-                lastPasswordChange = ?, passwordExpiresAt = ?, failedLoginAttempts = ?,
-                emailVerified = ?, mustChangePassword = ?
-            WHERE id = ?
-            """;
-        int rowsAffected = jdbcTemplate.update(sql,
-                user.getUsername(),
-                user.getPasswordHash(),
-                user.getActive(),
-                user.getAccountNonLocked(),
-                user.getLastPasswordChange(),
-                user.getPasswordExpiresAt(),
-                user.getFailedLoginAttempts(),
-                user.getEmailVerified(),
-                user.getMustChangePassword(),
-                user.getId()
-        );
-        logger.info("Updated user. Rows affected: {}", rowsAffected);
+        // Actualizamos la entidad usando JPA/Hibernate
+        entityManager.merge(user);
+
+        logger.info("Updated user successfully with id: {}", user.getId());
     }
 
     /**
@@ -147,10 +172,18 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public void deleteUser(Long id) {
         logger.info("Deleting user with id: {}", id);
-        String sql = "DELETE FROM users WHERE id = ?";
-        int rowsAffected = jdbcTemplate.update(sql, id);
-        logger.info("Deleted user. Rows affected: {}", rowsAffected);
+
+        // Buscar el usuario en la base de datos
+        User user = entityManager.find(User.class, id);
+        if (user != null) {
+            // Eliminar si existe
+            entityManager.remove(user);
+            logger.info("Deleted user with id: {}", id);
+        } else {
+            logger.warn("User with id: {} not found.", id);
+        }
     }
+
 
     /**
      * Recupera un usuario por su ID.
@@ -161,16 +194,17 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public User getUserById(Long id) {
         logger.info("Retrieving user by id: {}", id);
-        String sql = "SELECT * FROM users WHERE id = ?";
-        try {
-            User user = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(User.class), id);
+
+        User user = entityManager.find(User.class, id);
+        if (user != null) {
             logger.info("User retrieved: {}", user.getUsername());
-            return user;
-        } catch (Exception e) {
+        } else {
             logger.warn("No user found with id: {}", id);
-            return null;
         }
+
+        return user;
     }
+
 
     /**
      * Verifica si existe un usuario con el nombre de usuario especificado.
@@ -181,13 +215,17 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean existsUserByUsername(String username) {
         logger.info("Checking if user with username '{}' exists", username);
-        String sql = "SELECT COUNT(*) FROM users WHERE UPPER(username) = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, username.toUpperCase());
+
+        // HQL para contar usuarios con ese username, ignorando mayúsculas/minúsculas
+        String hql = "SELECT COUNT(u) FROM User u WHERE UPPER(u.username) = :username";
+        Long count = entityManager.createQuery(hql, Long.class)
+                .setParameter("username", username.toUpperCase())
+                .getSingleResult();
+
         boolean exists = count != null && count > 0;
         logger.info("User with username '{}' exists: {}", username, exists);
         return exists;
     }
-
     /**
      * Verifica si existe un usuario con el nombre de usuario especificado,
      * excluyendo un usuario con un ID concreto.
@@ -199,10 +237,16 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean existsUserByUsernameAndNotId(String username, Long id) {
         logger.info("Checking if user with username '{}' exists excluding id: {}", username, id);
-        String sql = "SELECT COUNT(*) FROM users WHERE UPPER(username) = ? AND id != ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, username.toUpperCase(), id);
+
+        String hql = "SELECT COUNT(u) FROM User u WHERE UPPER(u.username) = :username AND u.id != :id";
+        Long count = entityManager.createQuery(hql, Long.class)
+                .setParameter("username", username.toUpperCase())
+                .setParameter("id", id)
+                .getSingleResult();
+
         boolean exists = count != null && count > 0;
         logger.info("User with username '{}' exists excluding id {}: {}", username, id, exists);
         return exists;
     }
+
 }

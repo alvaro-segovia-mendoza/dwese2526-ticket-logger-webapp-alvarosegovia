@@ -1,43 +1,57 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities;
 
-import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * La clase `Province` representa una entidad que modela una provincia dentro de la base de datos.
+ * Contiene cuatro campos: `id`, `code`, `name` y `region`, donde:
+ * - `id` es el identificador único de la provincia,
+ * - `code` es un código asociado a la provincia,
+ * - `name` es el nombre de la provincia,
+ * - `region` representa la comunidad autónoma (entidad `Region`) a la que pertenece la provincia.
+ *
+ * Las anotaciones de Lombok ayudan a reducir el código repetitivo al generar automáticamente
+ * métodos comunes como getters, setters, constructores, y otros métodos estándar de los objetos.
+ */
 
 @Data
+// Genera automáticamente los métodos:
+// - Getters y setters para todos los campos.
+// - equals(), hashCode(), toString() y canEqual().
+// Esto mejora la legibilidad y evita código repetitivo.
+
 @NoArgsConstructor
+// Genera un constructor vacío (sin parámetros).
+// Es necesario para frameworks como Hibernate o JPA,
+// que requieren un constructor por defecto para instanciar objetos.
+
 @AllArgsConstructor
+// Genera un constructor que acepta todos los campos definidos en la clase.
+// Ideal para crear instancias completamente inicializadas de la entidad.
+@Entity // Marca esta clase como una entidad JPA.
+@Table(name = "provinces") // Define el nombre de la tabla asociada a esta entidad.
 public class Province {
 
     // Identificador único de la provincia (AUTO_INCREMENT en la tabla 'provinces').
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     // Código único de la provincia (VARCHAR(10) NOT NULL UNIQUE).
-    @NotEmpty(message = "{msg.province.code.notEmpty}")
-    @Size(max = 10, message = "{msg.province.code.size}")
+    @Column(name = "code", nullable = false, length = 2)
     private String code;
 
     // Nombre de la provincia (VARCHAR(100) NOT NULL).
-    @NotEmpty(message = "{msg.province.name.notEmpty}")
-    @Size(max = 100, message = "{msg.province.name.size}")
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    // Region asociada (puede venir instanciada pero con id NULL) por eso necesito una validación derivada
+    // Relación con entidad 'Region', representando la comunidad autónoma a la que pertenece la provincia.
+    @ManyToOne(fetch = FetchType.LAZY) // Relación de muchas provincias a una región
+    @JoinColumn(name = "region_id", nullable = false) // Clave foránea en la tabla provinces que referencia a la tabla regions.
     private Region region;
-
-    /**
-     * Validación derivada:
-     * Debe haberse seleccionado una región válida (region != null y region.id != null).
-     * Esto evita el problema de tener un objeto Región vacío que cumple @NotNull.
-     */
-    @AssertTrue(message = "{msg.province.region.notNull}")
-    public boolean isRegionSelected() {
-        return region != null && region.getId() != null;
-    }
 
     /**
      * Constructor de conveniencia sin {@code id}
