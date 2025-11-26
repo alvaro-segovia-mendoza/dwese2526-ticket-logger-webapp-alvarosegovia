@@ -51,6 +51,7 @@ main {
   HEADER / NAVBAR
   ========================================================= */
 .navbar {
+ position: relative;
  background-color: var(--color-primary);   /* Fondo negro */
  padding-top: 0.75rem;
  padding-bottom: 0.75rem;

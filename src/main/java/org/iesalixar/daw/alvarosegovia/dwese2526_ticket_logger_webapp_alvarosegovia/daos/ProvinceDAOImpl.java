@@ -1,5 +1,9 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.daos;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.*;
+import jakarta.transaction.Transactional;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Province;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Region;
 import org.slf4j.Logger;
@@ -13,65 +17,21 @@ import java.util.List;
 
 
 /**
- * Implementación de {@link ProvinceDAO} usando {@link JdbcTemplate}.
+ * Implementación de {@link ProvinceDAO}.
  * Gestiona las operaciones CRUD sobre la tabla 'provinces',
- * incluyendo el mapeo del objeto anidado {@code Region}.
  */
-@Repository
+@Repository // Anotación que marca esta clase como un componente que gestiona la persistencia.
+@Transactional
+// Indica que todos los métodos de esta clase deben ejecutarse dentro de una transacción.
+// Si algún método lanza una excepción en tiempo de ejecución, la transacción se revierte automáticamente (rollback).
+// Esto asegura la integridad de los datos: todas las operaciones dentro del método se confirman o se cancelan juntas.
 public class ProvinceDAOImpl implements ProvinceDAO{
 
     // Logger para registrar eventos importantes en el DAO
     private static final Logger logger = LoggerFactory.getLogger(ProvinceDAOImpl.class);
 
-    private final JdbcTemplate jdbcTemplate;
-
-    // Inyección de JdbcTemplate
-    public ProvinceDAOImpl(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
-    /**
-     * RowMapper para mapear cada fila del ResultSet a un objeto Province
-     * incluyendo su Region asociada.
-     *
-     * RowMapper<Province> es una interfaz funcional de Spring:
-     * - Tiene UN solo método: T mapRow (ResultSet rs, int rowNum) throws SQLException
-     * - Eso permite implementarla usando una expresión lambda en vez de una clase anónima.
-     *
-     * Esta lambda:
-     *  (rs, rowNum) -> { ... }
-     *
-     * es equivalente a:
-     *
-     *  new RowMapper<Province>() {
-     *      @Override
-     *
-     *      public Province mapRow (ResultSet rs, int rowNum) throws SQLException {
-     *           // ...
-     *      }
-     *   }
-     */
-    private final RowMapper<Province> provinceRowMapper = (rs, rowNum) -> {
-        // Creamos la instancia de Province que vamos a devolver
-        Province province = new Province();
-        // Mapeamos las columnas propias de la tabla provinces
-        // OJO: los alias usados en el SELECT deben coincidir con estos nombres de columna
-        province.setId(rs.getLong("id"));
-        province.setCode (rs.getString("code"));
-        province.setName (rs.getString("name"));
-
-        // Ahora mapeamos la región asociada (JOIN con regions)
-        // Usamos alias en el SELECT: r.id AS region_id, r.code AS region_code, r.name AS region_name
-        Region region = new Region();
-        region.setId(rs.getLong("region_id"));
-        region.setCode (rs.getString("region_code")); region.setName (rs.getString("region_name"));
-
-        // Asignamos el objeto Region a la Province
-        province.setRegion (region);
-
-        // Devolvemos la Province completamente montada
-        return province;
-    };
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * Lista todas las provincias de la base de datos.
@@ -80,14 +40,70 @@ public class ProvinceDAOImpl implements ProvinceDAO{
     @Override
     public List<Province> listAllProvinces() {
         logger.info("Listing all provinces with their regions from the database.");
-        String sql =
-                "SELECT p.id, p.code, p.name, " +
-                        "       r.id AS region_id, r.code AS region_code, r.name AS region_name " +
-                        "FROM provinces p " +
-                        "JOIN regions r ON p.region_id = r.id";
-        List<Province> provinces = jdbcTemplate.query(sql, provinceRowMapper);
+        String hql = "SELECT p FROM Province p JOIN FETCH p.region";
+        List<Province> provinces = entityManager.createQuery(hql, Province.class).getResultList();
         logger.info("Retrieved {} provinces from the database.", provinces.size());
         return provinces;
+    }
+
+    /**
+     * Lista una página de provincias con su región asociada.
+     *
+     * @param page página actual (0-based)
+     * @param size número de elementos por página
+     * @param sortField campo por el que se ordenan los resultados (id, code, name, region.name).
+     * @param sortDir   dirección de ordenación ("asc" o "desc").
+     * @return     lista de provincias para esa página
+     */
+    @Override
+    public List<Province> listProvincesPage(int page, int size, String sortField, String sortDir) {
+        logger.info("Listing provinces page={}, size={}, sortField={}, sortDir={} from the database.", page, size, sortField, sortDir);
+
+        int offset = page * size;
+
+        // 1. Creación de Criteria
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Province> cq = cb.createQuery(Province.class);
+        Root<Province> root = cq.from(Province.class);
+        // Hacemos fetch de region para que venga creada (equivalente al JOIN FETCH)
+        root.fetch("region", JoinType.INNER);
+        // Join separado para poder usar region.name en ORDER BY
+        Join<Province, Region> regionJoin = root.join("region", JoinType.INNER);
+        // 2. Determina el campo de ordenación permitido (whitelist)
+        Path<?> sortPath;
+        switch (sortField) {
+            case "id" -> sortPath = root.get("id");
+            case "code" -> sortPath = root.get("code");
+            case "name" -> sortPath = root.get("name");
+            case "regionName" -> sortPath = regionJoin.get("name"); // region.name
+            default -> {
+                logger.warn("Unknown sortField '{}', defaulting to 'name'.", sortField);
+                sortPath = root.get("name");
+            }
+        }
+
+        // 3. Dirección de ordenación
+        boolean descending = "desc".equalsIgnoreCase(sortDir);
+        // cb.desc y cb.asc son funciones predefinidas de criteria para las ordenaciones
+        Order order = descending ? cb.desc(sortPath) : cb.asc(sortPath);
+        // 4. Aplicar ordenación a la query
+        cq.select(root).orderBy(order);
+        // 5. Crear TypedQuery, aplicar paginación y ejecutar
+        return entityManager.createQuery(cq)
+                .setFirstResult(offset)
+                .setMaxResults(size)
+                .getResultList();
+    }
+
+
+    /**
+     * @return Devuelve el número total de provincias
+     */
+    @Override
+    public long countProvinces() {
+        String hql = "SELECT COUNT(p) FROM Province p";
+        Long total = entityManager.createQuery(hql, Long.class).getSingleResult();
+        return (total != null) ? total : 0L;
     }
 
     /**
@@ -101,14 +117,8 @@ public class ProvinceDAOImpl implements ProvinceDAO{
                 province.getName(),
                 province.getRegion() != null ? province.getRegion().getId() : null
         );
-        String sql = "INSERT INTO provinces (code, name, region_id) VALUES (?, ?, ?)";
-        int rowsAffected = jdbcTemplate.update(sql,
-                province.getCode(),
-                province.getName(),
-                province.getRegion() != null ? province.getRegion().getId() : null
-        );
-
-        logger.info("Inserted province. Rows affected: {}", rowsAffected);
+        entityManager.persist(province);
+        logger.info("Inserted province. Rows affected: {}", province.getId());
     }
 
     /**
@@ -118,14 +128,8 @@ public class ProvinceDAOImpl implements ProvinceDAO{
     @Override
     public void updateProvince(Province province) {
         logger.info("Updating province with id: {}", province.getId());
-        String sql = "UPDATE provinces SET code = ?, name = ?, region_id = ? WHERE id = ?";
-        int rowsAffected = jdbcTemplate.update(sql,
-                province.getCode(),
-                province.getName(),
-                province.getRegion() != null ? province.getRegion().getId() : null,
-                province.getId()
-        );
-        logger.info("Updated province. Rows affected: {}", rowsAffected);
+        entityManager.merge(province);
+        logger.info("Updated province with id: {}", province.getId());
     }
 
     /**
@@ -135,9 +139,13 @@ public class ProvinceDAOImpl implements ProvinceDAO{
     @Override
     public void deleteProvince(Long id) {
         logger.info("Deleting province with id: {}", id);
-        String sql = "DELETE FROM provinces WHERE id = ?";
-        int rowsAffected = jdbcTemplate.update(sql, id);
-        logger.info("Deleted province. Rows affected: {}", rowsAffected);
+        Province province = entityManager.find(Province.class, id);
+        if (province != null) {
+            entityManager.remove(province);
+            logger.info("Deleted province with ID: {}", id);
+        } else {
+            logger.warn("Province with id: {} not found.", id);
+        }
     }
 
     /**
@@ -148,22 +156,13 @@ public class ProvinceDAOImpl implements ProvinceDAO{
     @Override
     public Province getProvinceById(Long id) {
         logger.info("Retrieving province by id: {}", id);
-        String sql =
-                "SELECT p.id, p.code, p.name, " +
-                "       r.id AS region_id, r.code AS region_code, r.name AS region_name " +
-                "FROM provinces p " +
-                "JOIN regions r ON p.region_id = r.id " +
-                "WHERE p.id = ?";
-        try {
-            Province province = jdbcTemplate.queryForObject(sql, provinceRowMapper, id);
-            if (province != null) {
-                logger.info("Province retrieved: {} - {}", province.getCode(), province.getName());
-            }
-            return province;
-        } catch (Exception e) {
+        Province province = entityManager.find(Province.class, id);
+        if (province != null) {
+            logger.info("Province retrieved: {} - {}", province.getCode(), province.getName());
+        } else {
             logger.warn("No province found with id: {}", id);
-            return null;
         }
+        return province;
     }
 
     /**
@@ -174,10 +173,13 @@ public class ProvinceDAOImpl implements ProvinceDAO{
     @Override
     public boolean existsProvinceByCode(String code) {
         logger.info("Checking if province with code: {} exists", code);
-        String sql = "SELECT COUNT(*) FROM provinces WHERE UPPER(code) = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, code.toUpperCase());
+        String hql = "SELECT COUNT(p) FROM Province p WHERE UPPER(p.code) = :code";
+        Long count = entityManager.createQuery(hql, Long.class)
+                .setParameter("code", code.toUpperCase())
+                .getSingleResult();
         boolean exists = count != null && count > 0;
         logger.info("Province with code: {} exists: {}", code, exists);
+
         return exists;
     }
 
@@ -191,8 +193,11 @@ public class ProvinceDAOImpl implements ProvinceDAO{
     @Override
     public boolean existsProvinceByCodeAndNotId(String code, Long id) {
         logger.info("Checking if province with code: {} exists excluding id: {}", code, id);
-        String sql = "SELECT COUNT(*) FROM provinces WHERE UPPER(code) = ? AND id != ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, code.toUpperCase(), id);
+        String query = "SELECT COUNT(p) FROM Province p WHERE UPPER(p.code) = :code AND p.id != :id";
+        Long count = entityManager.createQuery(query, Long.class)
+                .setParameter("code", code.toUpperCase())
+                .setParameter("id", id)
+                .getSingleResult();
         boolean exists = count != null && count > 0;
         logger.info("Province with code: {} exists excluding id {}: {}", code, id, exists);
         return exists;
@@ -201,8 +206,10 @@ public class ProvinceDAOImpl implements ProvinceDAO{
     @Override
     public boolean existsProvinceByName(String name) {
         logger.info("Checking if province with name: {} exists", name);
-        String sql = "SELECT COUNT(*) FROM provinces WHERE UPPER(name) = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, name.toUpperCase());
+        String query = "SELECT COUNT(p) FROM Province p WHERE UPPER(p.name) = :name";
+        Long count = entityManager.createQuery(query, Long.class)
+                .setParameter("code", name.toUpperCase())
+                .getSingleResult();
         boolean exists = count != null && count > 0;
         logger.info("Province with name: {} exists: {}", name, exists);
         return exists;

@@ -7,6 +7,8 @@ import java.util.List;
 public interface RegionDAO {
 
     List<Region> listAllRegions();
+    List<Region> listRegionsPage(int page, int size, String sortField, String sortDir);
+    long countRegions();
     void insertRegion (Region region);
     void updateRegion (Region region);
     void deleteRegion(Long id);
