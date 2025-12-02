@@ -203,12 +203,23 @@ public class ProvinceDAOImpl implements ProvinceDAO{
         return exists;
     }
 
+    /**
+     * Comprueba si existe una provincia con un nombre dado.
+     * <p>
+     * Este método realiza una consulta JPQL para contar cuántas provincias
+     * tienen un nombre que coincide con el proporcionado, ignorando mayúsculas/minúsculas.
+     * Devuelve true si al menos una provincia coincide, false en caso contrario.
+     * </p>
+     *
+     * @param name el nombre de la provincia que se quiere comprobar
+     * @return     true si existe al menos una provincia con el nombre dado, false si no existe
+     */
     @Override
     public boolean existsProvinceByName(String name) {
         logger.info("Checking if province with name: {} exists", name);
         String query = "SELECT COUNT(p) FROM Province p WHERE UPPER(p.name) = :name";
         Long count = entityManager.createQuery(query, Long.class)
-                .setParameter("code", name.toUpperCase())
+                .setParameter("name", name.toUpperCase())
                 .getSingleResult();
         boolean exists = count != null && count > 0;
         logger.info("Province with name: {} exists: {}", name, exists);

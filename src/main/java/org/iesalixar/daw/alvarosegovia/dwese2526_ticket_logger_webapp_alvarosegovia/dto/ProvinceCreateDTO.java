@@ -22,11 +22,11 @@ public class ProvinceCreateDTO {
     private Long id;
 
     @NotBlank(message = "{msg.province.code.notEmpty}")
-    @Size(max = 2, message = "{msg.region.code.size}")
+    @Size(max = 10, message = "{msg.province.code.size}")
     private String code;
 
     @NotBlank(message = "{msg.province.name.notEmpty}")
-    @Size(max = 100, message = "{msg.region.name.notEmpty}")
+    @Size(max = 100, message = "{msg.province.name.size}")
     private String name;
 
     @NotNull(message = "{msg.province.regionId.notNull}")

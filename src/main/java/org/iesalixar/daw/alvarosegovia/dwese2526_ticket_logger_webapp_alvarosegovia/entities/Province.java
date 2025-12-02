@@ -41,7 +41,7 @@ public class Province {
     private Long id;
 
     // Código único de la provincia (VARCHAR(10) NOT NULL UNIQUE).
-    @Column(name = "code", nullable = false, length = 2)
+    @Column(name = "code", nullable = false, length = 10)
     private String code;
 
     // Nombre de la provincia (VARCHAR(100) NOT NULL).

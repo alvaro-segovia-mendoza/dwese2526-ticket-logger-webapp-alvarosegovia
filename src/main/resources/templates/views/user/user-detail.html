@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head ('Ticket Logger - User Detail')"></head>
+
+<body class="d-flex flex-column h-100">
+
+<!-- Insertar el fragmento del header -->
+<header th:replace="fragments/header :: header"></header>
+
+<!-- Contenido dinámico -->
+<main class="detail-page">
+    <div class="detail-card">
+
+        <br><br>
+        <!-- Título con i18n -->
+        <h1 th:text="#{msg.user-detail.title}">Detalle del Usuario</h1>
+
+        <!-- Mensaje de error -->
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+        <!-- Detalles del usuario -->
+        <table class="table table-bordered table-striped mt-3">
+            <tbody>
+            <tr>
+                <th th:text="#{msg.user-detail.id}">ID</th>
+                <td th:text="${user.id}"></td>
+            </tr>
+            <tr>
+                <th th:text="#{msg.user-detail.username}">Username</th>
+                <td th:text="${user.username}"></td>
+            </tr>
+            <tr>
+                <th th:text="#{msg.user-detail.active}">Activo</th>
+                <td th:text="${user.active} ? 'Sí' : 'No'"></td>
+            </tr>
+            <tr>
+                <th th:text="#{msg.user-detail.accountNonLocked}">Cuenta No Bloqueada</th>
+                <td th:text="${user.accountNonLocked} ? 'Sí' : 'No'"></td>
+            </tr>
+            <tr>
+                <th th:text="#{msg.user-detail.emailVerified}">Email Verificado</th>
+                <td th:text="${user.emailVerified} ? 'Sí' : 'No'"></td>
+            </tr>
+            <tr>
+                <th th:text="#{msg.user-detail.mustChangePassword}">Debe Cambiar Contraseña</th>
+                <td th:text="${user.mustChangePassword} ? 'Sí' : 'No'"></td>
+            </tr>
+            <tr>
+                <th th:text="#{msg.user-detail.lastPasswordChange}">Último Cambio de Contraseña</th>
+                <td th:text="${user.lastPasswordChange}"></td>
+            </tr>
+            <tr>
+                <th th:text="#{msg.user-detail.passwordExpiresAt}">Contraseña Expira En</th>
+                <td th:text="${user.passwordExpiresAt}"></td>
+            </tr>
+            <tr>
+                <th th:text="#{msg.user-detail.failedLoginAttempts}">Intentos Fallidos</th>
+                <td th:text="${user.failedLoginAttempts}"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Botones de acción -->
+        <div class="mt-3">
+            <a th:href="@{/users/edit(id=${user.id})}" class="btn btn-primary me-2" th:text="#{msg.user-detail.edit}">
+                Editar
+            </a>
+
+            <form th:action="@{/users/delete}" method="post" class="d-inline">
+                <input type="hidden" name="id" th:value="${user.id}"/>
+                <button type="submit" class="btn btn-danger"
+                        th:onclick="|return confirm('#{msg.user-detail.confirmDelete}');|"
+                        th:text="#{msg.user-detail.delete}">
+                    Eliminar
+                </button>
+            </form>
+
+            <a th:href="@{/users}" class="btn btn-secondary ms-2" th:text="#{msg.user-detail.returnback}">
+                Volver a la lista
+            </a>
+        </div>
+
+    </div>
+</main>
+
+<!-- Insertar el fragmento del footer -->
+<footer th:replace="fragments/footer :: footer"></footer>
+
+<div th:replace="fragments/scripts :: scripts"></div>
+
+</body>
+</html>

@@ -19,6 +19,7 @@ public class UserMapper {
         return UserDTO.builder()
                 .id(entity.getId())
                 .username(entity.getUsername())
+                .passwordHash(entity.getPasswordHash())
                 .active(entity.getActive())
                 .accountNonLocked(entity.getAccountNonLocked())
                 .emailVerified(entity.getEmailVerified())
@@ -51,6 +52,25 @@ public class UserMapper {
                 .passwordExpiresAt(entity.getPasswordExpiresAt())
                 .failedLoginAttempts(entity.getFailedLoginAttempts())
                 .build();
+    }
+
+    // --------------------------------------
+    // Entity -> DTO (detail)
+    // --------------------------------------
+    public static UserDetailDTO toDetailDTO(User entity) {
+        if (entity == null) return null;
+        return new UserDetailDTO(
+                entity.getId(),
+                entity.getUsername(),
+                entity.getPasswordHash(),
+                entity.getActive(),
+                entity.getAccountNonLocked(),
+                entity.getEmailVerified(),
+                entity.getMustChangePassword(),
+                entity.getLastPasswordChange(),
+                entity.getPasswordExpiresAt(),
+                entity.getFailedLoginAttempts()
+        );
     }
 
     // --------------------------------------

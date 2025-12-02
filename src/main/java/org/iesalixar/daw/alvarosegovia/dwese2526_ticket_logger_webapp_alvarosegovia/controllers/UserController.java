@@ -2,10 +2,7 @@ package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvaroseg
 
 import jakarta.validation.Valid;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.daos.UserDAO;
-import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.RegionUpdateDTO;
-import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.UserCreateDTO;
-import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.UserDTO;
-import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.UserUpdateDTO;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.*;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Region;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.User;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.mappers.RegionMapper;
@@ -14,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -41,9 +37,6 @@ public class UserController {
 
     @Autowired
     private MessageSource messageSource;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
 
     /**
@@ -155,46 +148,38 @@ public class UserController {
     @PostMapping("/insert")
     public String insertUser(@Valid @ModelAttribute("user") UserCreateDTO userDTO,
                              BindingResult result,
-                             RedirectAttributes redirectAttributes,
+                             Model model,
                              Locale locale) {
+
         logger.info("Insertando nuevo usuario con nombre {}", userDTO.getUsername());
 
         try {
-            // Si hay errores de validación, volver al formulario
             if (result.hasErrors()) {
                 return "views/user/user-form";
             }
 
-            // Comprobar si el username ya existe
             if (userDAO.existsUserByUsername(userDTO.getUsername())) {
                 logger.warn("El nombre de usuario {} ya existe.", userDTO.getUsername());
-                String errorMessage = messageSource.getMessage(
-                        "msg.user-controller.insert.usernameExist", null, locale);
-                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-                return "redirect:/users/new";
+                model.addAttribute("errorMessage", messageSource.getMessage(
+                        "msg.user-controller.insert.usernameExist", null, locale));
+                return "views/user/user-form";
             }
 
-            // Mapear DTO -> Entity
             User user = UserMapper.toEntity(userDTO);
 
-            // Hashear la contraseña
-            user.setPasswordHash(passwordEncoder.encode(userDTO.getPasswordHash()));
-
-            // Insertar en BD
             userDAO.insertUser(user);
 
             logger.info("Usuario {} insertado con éxito.", user.getUsername());
 
         } catch (Exception e) {
             logger.error("Error al insertar el usuario {}: {}", userDTO.getUsername(), e.getMessage(), e);
-            String errorMessage = messageSource.getMessage(
-                    "msg.user-controller.insert.error", null, locale);
-            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+            model.addAttribute("errorMessage", messageSource.getMessage(
+                    "msg.user-controller.insert.error", null, locale));
+            return "views/user/user-form";
         }
 
-        return "redirect:/users"; // Redirigir a la lista de usuarios
+        return "redirect:/users";
     }
-
 
     /**
      * Actualiza un usuario existente.
@@ -208,54 +193,82 @@ public class UserController {
     @PostMapping("/update")
     public String updateUser(@Valid @ModelAttribute("user") UserUpdateDTO userDTO,
                              BindingResult result,
-                             RedirectAttributes redirectAttributes,
+                             Model model,
                              Locale locale) {
+
         logger.info("Actualizando usuario con ID {}", userDTO.getId());
+
         try {
             if (result.hasErrors()) {
                 return "views/user/user-form";
             }
 
-            // Comprobar si el username ya existe para otro usuario
             if (userDAO.existsUserByUsernameAndNotId(userDTO.getUsername(), userDTO.getId())) {
                 logger.warn("El nombre de usuario {} ya existe para otro usuario.", userDTO.getUsername());
-                String errorMessage = messageSource.getMessage(
-                        "msg.user-controller.update.usernameExist", null, locale);
-                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-                return "redirect:/users/edit?id=" + userDTO.getId();
+                model.addAttribute("errorMessage", messageSource.getMessage(
+                        "msg.user-controller.update.usernameExist", null, locale));
+                return "views/user/user-form";
             }
 
-            // Recuperar la entidad existente de la BD
             User existingUser = userDAO.getUserById(userDTO.getId());
             if (existingUser == null) {
                 logger.warn("Usuario con ID {} no encontrado.", userDTO.getId());
-                String errorMessage = messageSource.getMessage(
-                        "msg.user-controller.update.notFound", null, locale);
-                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+                model.addAttribute("errorMessage", messageSource.getMessage(
+                        "msg.user-controller.update.notFound", null, locale));
                 return "redirect:/users";
             }
 
-            // Copiar campos del DTO a la entidad
             UserMapper.copyToExistingEntity(userDTO, existingUser);
 
-            // Hashear la contraseña solo si se ha proporcionado una nueva
-            if (userDTO.getPasswordHash() != null && !userDTO.getPasswordHash().isBlank()) {
-                existingUser.setPasswordHash(passwordEncoder.encode(userDTO.getPasswordHash()));
-            }
-
-            // Actualizar en la base de datos
             userDAO.updateUser(existingUser);
 
             logger.info("Usuario con ID {} actualizado con éxito.", userDTO.getId());
 
         } catch (Exception e) {
             logger.error("Error al actualizar el usuario con ID {}: {}", userDTO.getId(), e.getMessage(), e);
-            String errorMessage = messageSource.getMessage(
-                    "msg.user-controller.update.error", null, locale);
-            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+            model.addAttribute("errorMessage", messageSource.getMessage(
+                    "msg.user-controller.update.error", null, locale));
+            return "views/user/user-form";
         }
 
         return "redirect:/users";
+    }
+
+
+    /**
+     * Muestra el detalle de un usuario específico.
+     *
+     * @param id                  Identificador del usuario a consultar.
+     * @param model               Modelo de Spring MVC para pasar datos a la vista.
+     * @param redirectAttributes  Mensajes flash al redirigir (errores/avisos).
+     * @param locale              Configuración regional para internacionalización de mensajes.
+     * @return Plantilla Thymeleaf {@code views/user/user-detail} o redirección a {@code /users}.
+     */
+    @GetMapping("/detail")
+    public String showDetail(@RequestParam("id") Long id,
+                             Model model,
+                             RedirectAttributes redirectAttributes,
+                             Locale locale) {
+        logger.info("Mostrando detalle del usuario con ID {}", id);
+        try {
+            User user = userDAO.getUserById(id);
+            if (user == null) {
+                logger.warn("No se encontró el usuario con ID {}", id);
+                String msg = messageSource.getMessage("msg.user-controller.detail.notFound", null, locale);
+                redirectAttributes.addFlashAttribute("errorMessage", msg);
+                return "redirect:/users";
+            }
+
+            UserDetailDTO userDetailDTO = UserMapper.toDetailDTO(user);
+            model.addAttribute("user", userDetailDTO);
+
+            return "views/user/user-detail";
+        } catch (Exception e) {
+            logger.error("Error al obtener el detalle del usuario {}: {}", id, e.getMessage(), e);
+            String msg = messageSource.getMessage("msg.user-controller.detail.error", null, locale);
+            redirectAttributes.addFlashAttribute("errorMessage", msg);
+            return "redirect:/users";
+        }
     }
 
 

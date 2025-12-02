@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO reutilizable para crear y actualizar regiones.
+ * DTO para crear regiones.
  */
 @Data
 @NoArgsConstructor
@@ -24,6 +24,6 @@ public class RegionCreateDTO {
     private String code;
 
     @NotBlank(message = "{msg.region.name.notEmpty}")
-    @Size(max = 100, message = "{msg.region.name.notEmpty}")
+    @Size(max = 100, message = "{msg.region.name.size}")
     private String name;
 }
