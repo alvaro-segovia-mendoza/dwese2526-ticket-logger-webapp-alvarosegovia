@@ -193,42 +193,67 @@ public class ProvinceController {
     @PostMapping("/insert")
     public String insertProvince(@Valid @ModelAttribute("province") ProvinceCreateDTO provinceDTO,
                                  BindingResult result,
-                                 RedirectAttributes redirectAttributes,
                                  Model model,
                                  Locale locale) {
+
         logger.info("Insertando nueva provincia con código {} y nombre {}", provinceDTO.getCode(), provinceDTO.getName());
+
         try {
+            // --- Validación de campos del formulario ---
             if (result.hasErrors()) {
-                // Volvemos a cargar las regiones para el select cuando hay errores
+                // Volvemos a cargar las regiones para el select
                 List<Region> listRegions = regionDAO.listAllRegions();
-                List<RegionDTO> listRegionsDTO = RegionMapper.toDTOList(listRegions);
-                model.addAttribute("listRegions", listRegionsDTO);
+                model.addAttribute("listRegions", RegionMapper.toDTOList(listRegions));
                 return "views/province/province-form";
             }
 
+            // --- Validación de código duplicado ---
             if (provinceDAO.existsProvinceByCode(provinceDTO.getCode())) {
                 logger.warn("El código de la provincia {} ya existe.", provinceDTO.getCode());
                 String errorMessage = messageSource.getMessage("msg.province-controller.insert.codeExist", null, locale);
-                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-                return "redirect:/provinces/new";
-            } else if (provinceDAO.existsProvinceByName(provinceDTO.getName())) {
-                logger.warn("El nombre de la provincia {} ya existe.", provinceDTO.getName());
-                String errorMessage = messageSource.getMessage("msg.province-controller.insert.nameExist", null, locale);
-                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-                return "redirect:/provinces/new";
+
+                // Recargar regiones para el select
+                List<Region> listRegions = regionDAO.listAllRegions();
+                model.addAttribute("listRegions", RegionMapper.toDTOList(listRegions));
+                model.addAttribute("errorMessage", errorMessage);
+
+                return "views/province/province-form";
             }
 
-            // Mappear DTO -> Entity y persistir
+            // --- Validación de nombre duplicado ---
+            if (provinceDAO.existsProvinceByName(provinceDTO.getName())) {
+                logger.warn("El nombre de la provincia {} ya existe.", provinceDTO.getName());
+                String errorMessage = messageSource.getMessage("msg.province-controller.insert.nameExist", null, locale);
+
+                // Recargar regiones para el select
+                List<Region> listRegions = regionDAO.listAllRegions();
+                model.addAttribute("listRegions", RegionMapper.toDTOList(listRegions));
+                model.addAttribute("errorMessage", errorMessage);
+
+                return "views/province/province-form";
+            }
+
+            // --- Insertar provincia ---
             Province province = ProvinceMapper.toEntity(provinceDTO);
             provinceDAO.insertProvince(province);
             logger.info("Provincia {} insertada con éxito.", province.getCode());
+
         } catch (Exception e) {
             logger.error("Error al insertar la provincia {}: {}", provinceDTO.getCode(), e.getMessage());
             String errorMessage = messageSource.getMessage("msg.province-controller.insert.error", null, locale);
-            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+            model.addAttribute("errorMessage", errorMessage);
+
+            // Recargar regiones para el select
+            List<Region> listRegions = regionDAO.listAllRegions();
+            model.addAttribute("listRegions", RegionMapper.toDTOList(listRegions));
+
+            return "views/province/province-form";
         }
-        return "redirect:/provinces"; // Redirigir a la lista de provincias
+
+        // Redirigir al listado si todo ha ido bien
+        return "redirect:/provinces";
     }
+
 
     /**
      * Actualiza una provincia existente en la base de datos.
@@ -244,42 +269,93 @@ public class ProvinceController {
                                  RedirectAttributes redirectAttributes,
                                  Model model,
                                  Locale locale) {
+
         logger.info("Actualizando provincia con ID {}", provinceDTO.getId());
+
         try {
+            // Si hay errores de validación, recargar regiones y mostrar formulario
             if (result.hasErrors()) {
-                // Volvemos a cargar las regiones para el select cuando hay errores
                 List<Region> listRegions = regionDAO.listAllRegions();
                 List<RegionDTO> listRegionsDTOs = RegionMapper.toDTOList(listRegions);
                 model.addAttribute("listRegions", listRegionsDTOs);
                 return "views/province/province-form";
             }
 
+            // -------- VALIDACIÓN DE CODE DUPLICADO (MISMO MENSAJE QUE INSERT) --------
             if (provinceDAO.existsProvinceByCodeAndNotId(provinceDTO.getCode(), provinceDTO.getId())) {
-                logger.warn("El código de la provincia {} ya existe para otra provincia.",provinceDTO.getCode());
-                String errorMessage = messageSource.getMessage("msg.province-controller.update.codeExist", null, locale);
-                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-                return "redirect:/provinces/edit?id=" + provinceDTO.getId();
-            }
-            if (provinceDAO.existsProvinceByName(provinceDTO.getName())) {
-                logger.warn("El nombre de la provincia {} ya existe para otra provincia.", provinceDTO.getName());
-                String errorMessage = messageSource.getMessage("msg.province-controller.update.nameExist", null, locale);
+
+                logger.warn("El código de la provincia {} ya existe para otra provincia.", provinceDTO.getCode());
+
+                String errorMessage = messageSource.getMessage(
+                        "msg.province-controller.insert.codeExist",   // <- MISMO QUE INSERT
+                        null,
+                        locale
+                );
+
+                // Volver al formulario manteniendo datos
+                List<Region> listRegions = regionDAO.listAllRegions();
+                List<RegionDTO> listRegionsDTOs = RegionMapper.toDTOList(listRegions);
+                model.addAttribute("listRegions", listRegionsDTOs);
                 model.addAttribute("errorMessage", errorMessage);
-                return "views/province/province-form"; // Mantener datos y mostrar error
+
+                return "views/province/province-form";
             }
 
-            // Mappear DTO -> Entity y persistir
+            // -------- VALIDACIÓN DE NAME DUPLICADO --------
+            if (provinceDAO.existsProvinceByName(provinceDTO.getName())) {
+
+                logger.warn("El nombre de la provincia {} ya existe para otra provincia.", provinceDTO.getName());
+
+                String errorMessage = messageSource.getMessage(
+                        "msg.province-controller.insert.nameExist",   // <- también el mismo que insert
+                        null,
+                        locale
+                );
+
+                List<Region> listRegions = regionDAO.listAllRegions();
+                List<RegionDTO> listRegionsDTOs = RegionMapper.toDTOList(listRegions);
+                model.addAttribute("listRegions", listRegionsDTOs);
+                model.addAttribute("errorMessage", errorMessage);
+
+                return "views/province/province-form";
+            }
+
+            // -------- ACTUALIZAR --------
             Province province = ProvinceMapper.toEntity(provinceDTO);
             provinceDAO.updateProvince(province);
+
             logger.info("Provincia con ID {} actualizada con éxito.", province.getId());
 
         } catch (Exception e) {
             logger.error("Error al actualizar la provincia con ID {}: {}", provinceDTO.getId(), e.getMessage());
-            String errorMessage = messageSource.getMessage("msg.province-controller.update.error", null, locale);
+            String errorMessage = messageSource.getMessage(
+                    "msg.province-controller.update.error",
+                    null,
+                    locale
+            );
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
         }
+
         return "redirect:/provinces";
     }
 
+    /**
+     * Método que gestiona la eliminación de una provincia.
+     * <p>
+     * Este método se invoca mediante una petición POST a la URL "/delete".
+     * Intenta eliminar la provincia con el ID proporcionado.
+     * En caso de éxito, redirige a la lista de provincias.
+     * Si ocurre un error durante la eliminación, se captura la excepción,
+     * se registra el error y se añade un mensaje de error a los atributos de redirección.
+     * </p>
+     *
+     * @param id                 el identificador de la provincia a eliminar
+     * @param redirectAttributes contenedor para añadir atributos flash que estarán disponibles
+     *                           tras la redirección (como mensajes de error)
+     * @param locale             el locale actual de la petición, utilizado para obtener
+     *                           mensajes localizados
+     * @return                   una redirección a la vista "/provinces"
+     */
     @PostMapping("/delete")
     public String deleteProvince(@RequestParam("id") Long id,
                                  RedirectAttributes redirectAttributes,

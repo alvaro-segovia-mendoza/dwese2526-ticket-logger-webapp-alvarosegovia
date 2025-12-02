@@ -18,11 +18,11 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ProvinceUpdateDTO {
 
-    @NotBlank(message = "{msg.province.id.notEmpty}")
+    @NotNull(message = "{msg.province.id.notEmpty}")  // Cambiado de @NotBlank a @NotNull
     private Long id;
 
     @NotBlank(message = "{msg.province.code.notEmpty}")
-    @Size(max = 2, message = "{msg.province.code.size}")
+    @Size(max = 10, message = "{msg.province.code.size}")
     private String code;
 
     @NotBlank(message = "{msg.province.name.notEmpty}")
@@ -32,3 +32,4 @@ public class ProvinceUpdateDTO {
     @NotNull(message = "{msg.province.regionId.notNull}")
     private Long regionId;
 }
+

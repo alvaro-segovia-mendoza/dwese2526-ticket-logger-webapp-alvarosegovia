@@ -110,6 +110,17 @@ public class RegionMapper {
         return e;
     }
 
+    /**
+     * Copia los datos de un DTO de actualización a una entidad existente.
+     * <p>
+     * Este método permite actualizar los campos modificables de una entidad
+     * {@link Region} a partir de un {@link RegionUpdateDTO}, sin alterar
+     * la identidad de la entidad ni sus relaciones asociadas.
+     * </p>
+     *
+     * @param dto    el DTO que contiene los nuevos valores para la entidad
+     * @param entity la entidad existente que se va a actualizar
+     */
     public static void copyToExistingEntity(RegionUpdateDTO dto, Region entity) {
         if (dto == null || entity == null) return;
         entity.setCode(dto.getCode());

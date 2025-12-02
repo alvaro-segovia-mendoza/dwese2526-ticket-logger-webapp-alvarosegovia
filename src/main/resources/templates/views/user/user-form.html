@@ -14,24 +14,33 @@
             Nuevo Usuario
         </h1>
 
-        <!-- Mensaje de error -->
+        <!-- Mensaje global de error (duplicado, fallo genérico) -->
         <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
-        <!-- Formulario -->
         <form th:action="${user.id == null} ? @{/users/insert} : @{/users/update}"
               th:object="${user}" method="post" class="mt-3">
             <input type="hidden" th:field="*{id}"/>
 
+            <!-- Username -->
             <div class="mb-3">
                 <label for="username" class="form-label" th:text="#{msg.user-form.username}">Nombre de Usuario</label>
                 <input type="text" id="username" th:field="*{username}" class="form-control"
-                       th:placeholder="#{msg.user-form.username}" required>
+                       th:placeholder="#{msg.user-form.username}">
+                <!-- Error específico de validación -->
+                <div th:if="${#fields.hasErrors('username')}" class="text-danger" th:errors="*{username}"></div>
             </div>
 
+            <!-- Password -->
             <div class="mb-3">
                 <label for="passwordHash" class="form-label" th:text="#{msg.user-form.password}">Contraseña</label>
-                <input type="text" id="passwordHash" th:field="*{passwordHash}" class="form-control"
-                       th:placeholder="#{msg.user-form.password}" required>
+                <input th:type="${user.id == null} ? 'password' : 'text'"
+                       id="passwordHash"
+                       th:field="*{passwordHash}"
+                       class="form-control"
+                       th:placeholder="#{msg.user-form.password}">
+
+                <!-- Error específico de validación -->
+                <div th:if="${#fields.hasErrors('passwordHash')}" class="text-danger" th:errors="*{passwordHash}"></div>
             </div>
 
             <div class="row">

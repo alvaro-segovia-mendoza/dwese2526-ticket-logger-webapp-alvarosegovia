@@ -223,25 +223,46 @@ public class RegionController {
     public String updateRegion(@Valid @ModelAttribute("region") RegionUpdateDTO regionDTO,
                                BindingResult result,
                                RedirectAttributes redirectAttributes,
+                               Model model,
                                Locale locale) {
+
         logger.info("Actualizando región con ID {}", regionDTO.getId());
+
         try {
+            // Validación de campos
             if (result.hasErrors()) {
-                    return "views/region/region-form"; // Devuelve el formulario para  mostrar los errores de validación
+                return "views/region/region-form";
             }
+
+            // Validar CODE duplicado (mismo mensaje que insert)
             if (regionDAO.existsRegionByCodeAndNotId(regionDTO.getCode(), regionDTO.getId())) {
                 logger.warn("El código de la región {} ya existe para otra región.", regionDTO.getCode());
-                String errorMessage = messageSource.getMessage("msg.region-controller.update.codeExist", null, locale);
-                redirectAttributes.addAttribute("errorMessage", errorMessage);
-                return "views/region/region-form" + regionDTO.getId(); // Mantener datos y mostrar error
+
+                String errorMessage = messageSource.getMessage(
+                        "msg.region-controller.insert.codeExist",  // MISMO MENSAJE QUE INSERT
+                        null,
+                        locale
+                );
+
+                model.addAttribute("errorMessage", errorMessage);
+                return "views/region/region-form"; // Mantiene datos y muestra error
             }
+
+            // Validar NAME duplicado (igual que insert)
             if (regionDAO.existsRegionByName(regionDTO.getName())) {
                 logger.warn("El nombre de la región {} ya existe para otra región.", regionDTO.getName());
-                String errorMessage = messageSource.getMessage("msg.region-controller.update.nameExist", null, locale);
-                redirectAttributes.addAttribute("errorMessage", errorMessage);
-                return "views/region/region-form" + regionDTO.getId(); // Mantener datos y mostrar error
+
+                String errorMessage = messageSource.getMessage(
+                        "msg.region-controller.insert.nameExist",
+                        null,
+                        locale
+                );
+
+                model.addAttribute("errorMessage", errorMessage);
+                return "views/region/region-form";
             }
-            // Cargar entidades existente y copiar campos editables desde el DTO
+
+            // Cargar entidad y actualizar
             Region region = regionDAO.getRegionById(regionDTO.getId());
             if (region == null) {
                 logger.warn("No se encontró la región con ID {}", regionDTO.getId());
@@ -249,16 +270,25 @@ public class RegionController {
                 redirectAttributes.addFlashAttribute("errorMessage", notFound);
                 return "redirect:/regions";
             }
+
             RegionMapper.copyToExistingEntity(regionDTO, region);
             regionDAO.updateRegion(region);
             logger.info("Región con ID {} actualizada con éxito.", region.getId());
+
         } catch (Exception e) {
             logger.error("Error al actualizar la región con ID {}: {}", regionDTO.getId(), e.getMessage());
-            String errorMessage = messageSource.getMessage("msg.region-controller.update.error", null, locale);
-            redirectAttributes.addAttribute("errorMessage", errorMessage);
-            return "views/region/region-form";
+
+            String errorMessage = messageSource.getMessage(
+                    "msg.region-controller.update.error",
+                    null,
+                    locale
+            );
+
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+            return "redirect:/regions";
         }
-        return "redirect:/regions"; // Redirigir a la lista de regiones
+
+        return "redirect:/regions";
     }
 
 

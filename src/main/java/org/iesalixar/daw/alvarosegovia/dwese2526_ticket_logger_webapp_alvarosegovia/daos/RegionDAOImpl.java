@@ -194,6 +194,17 @@ public class RegionDAOImpl implements RegionDAO {
         return exists;
     }
 
+    /**
+     * Comprueba si existe una región con un nombre dado.
+     * <p>
+     * Este método realiza una consulta JPQL para contar cuántas regiones
+     * tienen un nombre que coincide con el proporcionado, ignorando mayúsculas/minúsculas.
+     * Devuelve true si al menos una región coincide, false en caso contrario.
+     * </p>
+     *
+     * @param name el nombre de la región que se quiere comprobar
+     * @return     true si existe al menos una región con el nombre dado, false si no existe
+     */
     @Override
     public boolean existsRegionByName(String name) {
         logger.info("Checking if region with name: {} exists", name);

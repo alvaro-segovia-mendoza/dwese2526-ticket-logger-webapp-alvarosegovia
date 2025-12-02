@@ -31,7 +31,6 @@
                             <span class="ms-1" th:if="${sortField=='id'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-
                     <!-- Username -->
                     <th>
                         <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='username', sortDir=${(sortField=='username')?reverseSortDir:'asc'})}" class="text-decoration-none">
@@ -39,10 +38,8 @@
                             <span class="ms-1" th:if="${sortField=='username'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-
-                    <!-- Password (asteriscos, no ordenable) -->
+                    <!-- Password (asteriscos) -->
                     <th th:text="#{msg.user-list.passwordHash}">Contraseña</th>
-
                     <!-- Active -->
                     <th>
                         <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='active', sortDir=${(sortField=='active')?reverseSortDir:'asc'})}" class="text-decoration-none">
@@ -50,7 +47,6 @@
                             <span class="ms-1" th:if="${sortField=='active'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-
                     <!-- Account Non Locked -->
                     <th>
                         <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='accountNonLocked', sortDir=${(sortField=='accountNonLocked')?reverseSortDir:'asc'})}" class="text-decoration-none">
@@ -58,7 +54,6 @@
                             <span class="ms-1" th:if="${sortField=='accountNonLocked'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-
                     <!-- Last Password Change -->
                     <th>
                         <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='lastPasswordChange', sortDir=${(sortField=='lastPasswordChange')?reverseSortDir:'asc'})}" class="text-decoration-none">
@@ -66,7 +61,6 @@
                             <span class="ms-1" th:if="${sortField=='lastPasswordChange'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-
                     <!-- Password Expires At -->
                     <th>
                         <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='passwordExpiresAt', sortDir=${(sortField=='passwordExpiresAt')?reverseSortDir:'asc'})}" class="text-decoration-none">
@@ -74,7 +68,6 @@
                             <span class="ms-1" th:if="${sortField=='passwordExpiresAt'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-
                     <!-- Failed Login Attempts -->
                     <th>
                         <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='failedLoginAttempts', sortDir=${(sortField=='failedLoginAttempts')?reverseSortDir:'asc'})}" class="text-decoration-none">
@@ -82,7 +75,6 @@
                             <span class="ms-1" th:if="${sortField=='failedLoginAttempts'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-
                     <!-- Email Verified -->
                     <th>
                         <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='emailVerified', sortDir=${(sortField=='emailVerified')?reverseSortDir:'asc'})}" class="text-decoration-none">
@@ -90,7 +82,6 @@
                             <span class="ms-1" th:if="${sortField=='emailVerified'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-
                     <!-- Must Change Password -->
                     <th>
                         <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='mustChangePassword', sortDir=${(sortField=='mustChangePassword')?reverseSortDir:'asc'})}" class="text-decoration-none">
@@ -98,7 +89,6 @@
                             <span class="ms-1" th:if="${sortField=='mustChangePassword'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-
                     <!-- Actions -->
                     <th th:text="#{msg.user-list.actions}">Acciones</th>
                 </tr>
@@ -108,7 +98,7 @@
                 <tr th:each="user : ${listUsers}">
                     <td th:text="${user.id}"></td>
                     <td th:text="${user.username}"></td>
-                    <td class="text-break" style="max-width:180px;">********</td> <!-- password oculto -->
+                    <td class="text-break" style="max-width:180px;">********</td>
                     <td>
                         <span class="badge rounded-pill px-3 py-2"
                               th:text="${user.active} ? #{msg.user-list.yes} : #{msg.user-list.no}"
@@ -134,7 +124,13 @@
                     </td>
                     <td>
                         <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <!-- Ver detalles -->
+                            <a th:href="@{/users/detail(id=${user.id})}"
+                               class="btn btn-outline-secondary btn-sm me-1"
+                               th:text="#{msg.user-list.viewDetail}">Ver</a>
+
                             <a th:href="@{/users/edit(id=${user.id})}" class="btn btn-primary btn-sm" th:text="#{msg.user-list.edit}">Editar</a>
+
                             <form th:action="@{/users/delete}" method="post" class="d-inline">
                                 <input type="hidden" name="id" th:value="${user.id}"/>
                                 <button type="submit" class="btn btn-danger btn-sm"
@@ -177,7 +173,7 @@
         </div>
 
         <!-- Volver al inicio -->
-        <a th:href="@{/}" class="btn btn-secondary" th:text="#{msg.region-list.returnback}">Volver al inicio</a>
+        <a th:href="@{/}" class="btn btn-secondary" th:text="#{msg.user-list.returnback}">Volver al inicio</a>
     </div>
 </main>
 
