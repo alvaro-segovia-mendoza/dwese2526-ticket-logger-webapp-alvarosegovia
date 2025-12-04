@@ -21,13 +21,13 @@
               th:object="${user}" method="post" class="mt-3">
             <input type="hidden" th:field="*{id}"/>
 
-            <!-- Username -->
+            <!-- Email -->
             <div class="mb-3">
-                <label for="username" class="form-label" th:text="#{msg.user-form.username}">Nombre de Usuario</label>
-                <input type="text" id="username" th:field="*{username}" class="form-control"
-                       th:placeholder="#{msg.user-form.username}">
+                <label for="email" class="form-label" th:text="#{msg.user-form.email}">Email</label>
+                <input type="text" id="email" th:field="*{email}" class="form-control"
+                       th:placeholder="#{msg.user-form.email}">
                 <!-- Error específico de validación -->
-                <div th:if="${#fields.hasErrors('username')}" class="text-danger" th:errors="*{username}"></div>
+                <div th:if="${#fields.hasErrors('email')}" class="text-danger" th:errors="*{email}"></div>
             </div>
 
             <!-- Password -->

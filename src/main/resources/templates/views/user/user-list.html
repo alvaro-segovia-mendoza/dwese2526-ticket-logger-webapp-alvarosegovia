@@ -31,11 +31,11 @@
                             <span class="ms-1" th:if="${sortField=='id'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-                    <!-- Username -->
+                    <!-- Email -->
                     <th>
-                        <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='username', sortDir=${(sortField=='username')?reverseSortDir:'asc'})}" class="text-decoration-none">
-                            <span th:text="#{msg.user-list.username}">Usuario</span>
-                            <span class="ms-1" th:if="${sortField=='username'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
+                        <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='email', sortDir=${(sortField=='email')?reverseSortDir:'asc'})}" class="text-decoration-none">
+                            <span th:text="#{msg.user-list.email}">Email</span>
+                            <span class="ms-1" th:if="${sortField=='email'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
                     <!-- Password (asteriscos) -->
@@ -97,7 +97,7 @@
                 <tbody>
                 <tr th:each="user : ${listUsers}">
                     <td th:text="${user.id}"></td>
-                    <td th:text="${user.username}"></td>
+                    <td th:text="${user.email}"></td>
                     <td class="text-break" style="max-width:180px;">********</td>
                     <td>
                         <span class="badge rounded-pill px-3 py-2"

@@ -5,19 +5,46 @@ CREATE TABLE IF NOT EXISTS regions (
    name VARCHAR(100) NOT NULL
 );
 
--- Crear tabla para los Usuarios
+-- Crear tabla users si no existe
 CREATE TABLE IF NOT EXISTS users (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(40) NOT NULL UNIQUE,
-    passwordHash VARCHAR(500) NOT NULL,
-    active BOOLEAN NOT NULL DEFAULT TRUE,
-    accountNonLocked BOOLEAN NOT NULL DEFAULT TRUE,
-    lastPasswordChange DATETIME NULL,
-    passwordExpiresAt DATETIME NULL,
-    failedLoginAttempts INT DEFAULT 0,
-    emailVerified BOOLEAN NOT NULL DEFAULT FALSE,
-    mustChangePassword BOOLEAN NOT NULL DEFAULT FALSE
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   email VARCHAR(100) NOT NULL UNIQUE,
+   password_hash VARCHAR(500) NOT NULL,
+   active BOOLEAN NOT NULL DEFAULT TRUE,
+   account_non_locked BOOLEAN NOT NULL DEFAULT TRUE,
+   last_password_change DATETIME NULL,
+   password_expires_at DATETIME NULL,
+   failed_login_attempts INT DEFAULT 0,
+   email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+   must_change_password BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+-- Crear tabla para perfil de usuario relación 1:1 con users
+CREATE TABLE IF NOT EXISTS user_profiles (
+   -- Clave primaria = FK a users.id  (1:1 tipo "shared primary key")
+   user_id BIGINT NOT NULL,
+   first_name      VARCHAR(60)  NOT NULL,
+   last_name       VARCHAR(80)  NOT NULL,
+   -- Teléfono como texto (por prefijos, espacios, etc.)
+   phone_number    VARCHAR(30)  NULL,
+   -- Ruta/URL de la imagen de perfil (no el binario)
+   profile_image   VARCHAR(255) NULL,
+   -- Otros campos típicos de perfil
+   bio             VARCHAR(500) NULL,              -- pequeña descripción / sobre mí
+   locale          VARCHAR(10)  NULL,              -- es_ES, en_US...
+   created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                   ON UPDATE CURRENT_TIMESTAMP,
+   -- PRIMARY KEY obligatorio antes de FK en shared primary key
+   CONSTRAINT pk_user_profiles PRIMARY KEY (user_id),
+   -- Foreign key hacia users.id
+   CONSTRAINT fk_user_profiles_user
+       FOREIGN KEY (user_id)
+       REFERENCES users(id)
+       ON DELETE CASCADE
+       ON UPDATE CASCADE
+);
+
 
 -- Crear tabla para las provincias españolas
 CREATE TABLE IF NOT EXISTS provinces (

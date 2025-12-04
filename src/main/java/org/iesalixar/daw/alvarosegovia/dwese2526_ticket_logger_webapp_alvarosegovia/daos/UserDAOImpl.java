@@ -71,7 +71,7 @@ public class UserDAOImpl implements UserDAO {
         Path<?> sortPath;
         switch (sortField) {
             case "id" -> sortPath = root.get("id");
-            case "username" -> sortPath = root.get("username");
+            case "email" -> sortPath = root.get("email");
             case "active" -> sortPath = root.get("active");
             case "accountNonLocked" -> sortPath = root.get("accountNonLocked");
             case "lastPasswordChange" -> sortPath = root.get("lastPasswordChange");
@@ -80,8 +80,8 @@ public class UserDAOImpl implements UserDAO {
             case "emailVerified" -> sortPath = root.get("emailVerified");
             case "mustChangePassword" -> sortPath = root.get("mustChangePassword");
             default -> {
-                logger.warn("Unknown sortField '{}', defaulting to 'username'.", sortField);
-                sortPath = root.get("username");
+                logger.warn("Unknown sortField '{}', defaulting to 'email'.", sortField);
+                sortPath = root.get("email");
             }
         }
 
@@ -122,7 +122,7 @@ public class UserDAOImpl implements UserDAO {
      */
     @Override
     public void insertUser(User user) {
-        logger.info("Inserting user with username: {}", user.getUsername());
+        logger.info("Inserting user with email: {}", user.getEmail());
 
         // Si no tiene fecha de último cambio, la establecemos a ahora
         if (user.getLastPasswordChange() == null) {
@@ -197,7 +197,7 @@ public class UserDAOImpl implements UserDAO {
 
         User user = entityManager.find(User.class, id);
         if (user != null) {
-            logger.info("User retrieved: {}", user.getUsername());
+            logger.info("User retrieved: {}", user.getEmail());
         } else {
             logger.warn("No user found with id: {}", id);
         }
@@ -206,47 +206,63 @@ public class UserDAOImpl implements UserDAO {
     }
 
 
+
     /**
-     * Verifica si existe un usuario con el nombre de usuario especificado.
+     * Obtiene un usuario por su dirección de correo electrónico.
      *
-     * @param username nombre de usuario a verificar
-     * @return {@code true} si el usuario existe, {@code false} en caso contrario
+     * @param email Email del usuario a recuperar
+     * @return la entidad {@link User} correspondiente al email
      */
     @Override
-    public boolean existsUserByUsername(String username) {
-        logger.info("Checking if user with username '{}' exists", username);
+    public User getUserByEmail(String email) {
+        if (email == null) return null;
 
-        // HQL para contar usuarios con ese username, ignorando mayúsculas/minúsculas
-        String hql = "SELECT COUNT(u) FROM User u WHERE UPPER(u.username) = :username";
-        Long count = entityManager.createQuery(hql, Long.class)
-                .setParameter("username", username.toUpperCase())
-                .getSingleResult();
-
-        boolean exists = count != null && count > 0;
-        logger.info("User with username '{}' exists: {}", username, exists);
-        return exists;
+        String jpql = "SELECT u FROM User u WHERE u.email =:email";
+        return entityManager.createQuery(jpql, User.class)
+                .setParameter("email", email)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
     }
+
+    
     /**
      * Verifica si existe un usuario con el nombre de usuario especificado,
      * excluyendo un usuario con un ID concreto.
      *
-     * @param username nombre de usuario a verificar
+     * @param email nombre de usuario a verificar
      * @param id ID del usuario a excluir de la verificación
      * @return {@code true} si existe un usuario con el nombre de usuario (y no es el usuario con el ID dado), {@code false} de lo contrario
      */
     @Override
-    public boolean existsUserByUsernameAndNotId(String username, Long id) {
-        logger.info("Checking if user with username '{}' exists excluding id: {}", username, id);
+    public boolean existsUserByEmailAndNotId(String email, Long id) {
+        logger.info("Checking if user with email '{}' exists excluding id: {}", email, id);
 
-        String hql = "SELECT COUNT(u) FROM User u WHERE UPPER(u.username) = :username AND u.id != :id";
+        String hql = "SELECT COUNT(u) FROM User u WHERE UPPER(u.email) = :email AND u.id != :id";
         Long count = entityManager.createQuery(hql, Long.class)
-                .setParameter("username", username.toUpperCase())
+                .setParameter("email", email.toUpperCase())
                 .setParameter("id", id)
                 .getSingleResult();
 
         boolean exists = count != null && count > 0;
-        logger.info("User with username '{}' exists excluding id {}: {}", username, id, exists);
+        logger.info("User with email '{}' exists excluding id {}: {}", email, id, exists);
         return exists;
     }
 
+    /**
+     * Verifica si existe un usuario con el email indicando (ignorando mayúsculas/minúsculas).
+     * @param email nombre de usuario a comprobar.
+     * @param true si existe, false en caso contrario.
+     */
+    @Override
+    public boolean existsUserByEmail(String email) {
+        logger.info("Checking if user with email: {} exists", email);
+        String hql = "SELECT COUNT(u) FROM User u WHERE UPPER(u.email) =: email";
+        Long count = entityManager.createQuery(hql, Long.class)
+                .setParameter("email", email.toUpperCase())
+                .getSingleResult();
+        boolean exists = count != null && count > 0;
+        logger.info("User with email: {} exists: {}", email, exists);
+        return exists;
+    }
 }

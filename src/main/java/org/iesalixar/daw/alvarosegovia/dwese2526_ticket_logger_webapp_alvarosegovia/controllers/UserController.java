@@ -94,7 +94,7 @@ public class UserController {
     public String listUsers(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
-            @RequestParam(name = "sortField", defaultValue = "username") String sortField,
+            @RequestParam(name = "sortField", defaultValue = "email") String sortField,
             @RequestParam(name = "sortDir", defaultValue = "asc") String sortDir,
             Model model) {
 
@@ -151,17 +151,17 @@ public class UserController {
                              Model model,
                              Locale locale) {
 
-        logger.info("Insertando nuevo usuario con nombre {}", userDTO.getUsername());
+        logger.info("Insertando nuevo usuario con email {}", userDTO.getEmail());
 
         try {
             if (result.hasErrors()) {
                 return "views/user/user-form";
             }
 
-            if (userDAO.existsUserByUsername(userDTO.getUsername())) {
-                logger.warn("El nombre de usuario {} ya existe.", userDTO.getUsername());
+            if (userDAO.existsUserByEmail(userDTO.getEmail())) {
+                logger.warn("El nombre de usuario {} ya existe.", userDTO.getEmail());
                 model.addAttribute("errorMessage", messageSource.getMessage(
-                        "msg.user-controller.insert.usernameExist", null, locale));
+                        "msg.user-controller.insert.emailExist", null, locale));
                 return "views/user/user-form";
             }
 
@@ -169,10 +169,10 @@ public class UserController {
 
             userDAO.insertUser(user);
 
-            logger.info("Usuario {} insertado con éxito.", user.getUsername());
+            logger.info("Usuario {} insertado con éxito.", user.getEmail());
 
         } catch (Exception e) {
-            logger.error("Error al insertar el usuario {}: {}", userDTO.getUsername(), e.getMessage(), e);
+            logger.error("Error al insertar el usuario {}: {}", userDTO.getEmail(), e.getMessage(), e);
             model.addAttribute("errorMessage", messageSource.getMessage(
                     "msg.user-controller.insert.error", null, locale));
             return "views/user/user-form";
@@ -203,10 +203,10 @@ public class UserController {
                 return "views/user/user-form";
             }
 
-            if (userDAO.existsUserByUsernameAndNotId(userDTO.getUsername(), userDTO.getId())) {
-                logger.warn("El nombre de usuario {} ya existe para otro usuario.", userDTO.getUsername());
+            if (userDAO.existsUserByEmailAndNotId(userDTO.getEmail(), userDTO.getId())) {
+                logger.warn("El correo {} ya existe para otro usuario.", userDTO.getEmail());
                 model.addAttribute("errorMessage", messageSource.getMessage(
-                        "msg.user-controller.update.usernameExist", null, locale));
+                        "msg.user-controller.update.emailExist", null, locale));
                 return "views/user/user-form";
             }
 

@@ -34,54 +34,48 @@ import java.time.LocalDateTime;
 @Table(name = "users") // Define el nombre de la tabla en la base de datos
 public class User {
 
-    // Identificador único del usuario (clave primaria en la base de datos)
+    /** BIGINT AUTO_INCREMENT PRIMARY KEY */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Nombre de usuario utilizado para iniciar sesión
-    @Column(name = "username", nullable = false, length = 50, unique = true)
-    @NotEmpty(message = "{msg.user.username.notEmpty}")
-    @Size(min = 3, max = 50, message = "{msg.user.username.size}")
-    private String username;
+    /** VARCHAR(100) NOT NULL UNIQUE */
+    @Column(name = "email", nullable = false, unique = true, length = 40)
+    private String email;
 
-    // Hash de la contraseña del usuario
-    @Column(name = "password_hash", nullable = false)
-    @NotEmpty(message = "{msg.user.passwordHash.notEmpty}")
+    /** VARCHAR(500) NOT NULL UNIQUE */
+    @Column(name = "password_hash", nullable = false, length = 500)
     private String passwordHash;
 
-    // Indica si la cuenta del usuario está activa
+    /** BOOLEAN NOT NULL DEFAULT TRUE */
     @Column(name = "active", nullable = false)
-    @NotNull(message = "{msg.user.active.notNull}")
-    private Boolean active;
+    private Boolean active = Boolean.TRUE;
 
-    // Indica si la cuenta está bloqueada
+    /** BOOLEAN NOT NULL DEFAULT TRUE */
     @Column(name = "account_non_locked", nullable = false)
-    @NotNull(message = "{msg.user.accountNonLocked.notNull}")
-    private Boolean accountNonLocked;
+    private Boolean accountNonLocked = Boolean.TRUE;
 
-    // Fecha y hora del último cambio de contraseña
+    /** DATETIME NULL */
     @Column(name = "last_password_change")
-    @PastOrPresent(message = "{msg.user.lastPasswordChange.pastOrPresent}")
     private LocalDateTime lastPasswordChange;
 
-    // Fecha y hora en la que expira la contraseña actual
+    /** DATETIME NULL */
     @Column(name = "password_expires_at")
-    @FutureOrPresent(message = "{msg.user.passwordExpiresAt.futureOrPresent}")
     private LocalDateTime passwordExpiresAt;
 
-    // Número de intentos fallidos de inicio de sesión
-    @Column(name = "failed_login_attempts")
-    @Min(value = 0, message = "{msg.user.failedLoginAttempts.min}")
-    private Integer failedLoginAttempts;
+    /** INT DEFAULT 0 */
+    @Column(name = "failed_login_attempts", nullable = false)
+    private Integer failedLoginAttempts = 0;
 
-    // Indica si el correo electrónico del usuario ha sido verificado
+    /** BOOLEAN NOT NULL DEFAULT FALSE */
     @Column(name = "email_verified", nullable = false)
-    @NotNull(message = "{msg.user.emailVerified.notNull}")
-    private Boolean emailVerified;
+    private Boolean emailVerified = Boolean.FALSE;
 
-    // Indica si el usuario debe cambiar la contraseña al iniciar sesión
+    /** BOOLEAN NOT NULL DEFAULT FALSE */
     @Column(name = "must_change_password", nullable = false)
-    @NotNull(message = "{msg.user.mustChangePassword.notNull}")
-    private Boolean mustChangePassword;
+    private Boolean mustChangePassword = Boolean.FALSE;
+
+    /** Relación 1:1 con la entidad UserProfile */
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private UserProfile profile;
 }

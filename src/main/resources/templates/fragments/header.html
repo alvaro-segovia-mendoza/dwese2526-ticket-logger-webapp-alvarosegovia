@@ -1,39 +1,61 @@
-<!-- header.html -->
-<header th:fragment="header" xmlns:th="http://www.w3.org/1999/xhtml">
-    <!-- Fixed navbar -->
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+<header th:fragment="header" class="border-bottom bg-light" xmlns:th="http://www.thymeleaf.org">
+    <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">TL - ÁLVARO SEGOVIA MENDOZA</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarCollapse">
-                <ul class="navbar-nav me-auto mb-2 mb-md-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#" th:href="@{/}" th:text="#{nav.home}">Inicio</a>
+
+            <!-- Logo -->
+            <a class="navbar-brand d-flex align-items-center" th:href="@{/}">
+                <img th:src="@{/images/logo.svg}" alt="Ticket Logger" width="40" height="32" class="me-2">
+                <span class="navbar-brand text-primary">TL - ÁLVARO SEGOVIA MENDOZA</span>
+            </a>
+
+            <!-- Menú principal (siempre visible) -->
+            <ul class="navbar-nav me-auto mb-2 mb-md-0 d-flex flex-row">
+                <li class="nav-item me-3">
+                    <a class="nav-link active" aria-current="page" th:href="@{/}" th:text="#{nav.home}">Inicio</a>
+                </li>
+                <li class="nav-item me-3">
+                    <a class="nav-link" th:href="@{/regions}" th:text="#{nav.regions}">Comunidades Autónomas</a>
+                </li>
+                <li class="nav-item me-3">
+                    <a class="nav-link" th:href="@{/provinces}" th:text="#{nav.provinces}">Provincias</a>
+                </li>
+                <li class="nav-item me-3">
+                    <a class="nav-link" th:href="@{/users}" th:text="#{nav.users}">Usuarios</a>
+                </li>
+            </ul>
+
+            <!-- Avatar y menú usuario -->
+            <div class="dropdown text-end me-3">
+                <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    <img th:src="${userProfileForm?.profileImage ?: '/images/avatar.svg'}"
+                         alt="avatar" width="40" height="40"
+                         class="rounded-circle border border-2 border-primary-subtle">
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end text-small shadow">
+                    <li>
+                        <a class="dropdown-item" th:href="@{/profile/edit}" th:text="#{menu.editProfile}">Editar perfil</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" th:href="@{/regions}" th:text="#{nav.regions}">Comunidades Autónomas</a>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/profile/change-password}" th:text="#{menu.changePassword}">Cambiar contraseña</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" th:href="@{/provinces}" th:text="#{nav.provinces}">Provincias</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" th:href="@{/users}" th:text="#{nav.users}">Usuarios</a>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" th:href="@{/logout}" th:text="#{menu.logout}">Cerrar sesión</a>
                     </li>
                 </ul>
-                <!-- Selector de idioma -->
-                <form method="get"
-                      class="d-none d-lg-flex align-items-center me-3"
-                      th:action="@{/}">
-                    <label for="langSelect" class="visually-hidden">Idioma</label>
-                    <select id="langSelect" name="lang" class="form-select form-select-sm" onchange="this.form.submit()">
-                        <option value="es" th:selected="${#locale.language == 'es'}">Español</option>
-                        <option value="en" th:selected="${#locale.language == 'en'}">English</option>
-                    </select>
-                </form>
 
             </div>
+
+            <!-- Selector de idioma -->
+            <form method="get" class="d-flex align-items-center" th:action="@{/}">
+                <label for="langSelect" class="visually-hidden">Idioma</label>
+                <select id="langSelect" name="lang" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="es" th:selected="${#locale.language == 'es'}">Español</option>
+                    <option value="en" th:selected="${#locale.language == 'en'}">English</option>
+                </select>
+            </form>
+
         </div>
     </nav>
 </header>
