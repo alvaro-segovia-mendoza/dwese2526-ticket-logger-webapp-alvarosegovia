@@ -14,6 +14,8 @@ public interface UserDAO {
     void updateUser (User user);
     void deleteUser(Long id);
     User getUserById(Long id);
-    boolean existsUserByUsername (String username);
-    boolean existsUserByUsernameAndNotId(String username, Long id);
+    boolean existsUserByEmail (String email);
+    boolean existsUserByEmailAndNotId(String email, Long id);
+    User getUserByEmail(String email);
+
 }

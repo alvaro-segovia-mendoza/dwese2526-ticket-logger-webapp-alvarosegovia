@@ -1,5 +1,7 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +18,7 @@ public class UserDetailDTO {
 
     private Long id;
 
-    private String username;
+    private String email;
 
     private String passwordHash;
     // Indicadores de estado de la cuenta
@@ -31,4 +33,18 @@ public class UserDetailDTO {
 
     // Número de intentos fallidos de inicio de sesión
     private Integer failedLoginAttempts;
+
+    /** Email solo lectura, informativo en la vista */
+
+    private String firstName;
+
+    private String lastName;
+
+    private String phoneNumber;
+
+    private String profileImage;
+
+    private String bio;
+
+    private String locale;
 }

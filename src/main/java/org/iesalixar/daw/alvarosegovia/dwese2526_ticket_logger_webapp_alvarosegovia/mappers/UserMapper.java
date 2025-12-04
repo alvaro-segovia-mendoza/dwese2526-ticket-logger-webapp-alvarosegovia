@@ -1,7 +1,9 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.mappers;
 
+import lombok.extern.slf4j.Slf4j;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.*;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.User;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.UserProfile;
 
 import java.util.List;
 
@@ -9,6 +11,7 @@ import java.util.List;
  * Mapper utilizado entre la entidad {@link User} y sus DTOs.
  * Implementación simple sin frameworks de mapeo.
  */
+@Slf4j
 public class UserMapper {
 
     // --------------------------------------
@@ -18,7 +21,7 @@ public class UserMapper {
         if (entity == null) return null;
         return UserDTO.builder()
                 .id(entity.getId())
-                .username(entity.getUsername())
+                .email(entity.getEmail())
                 .passwordHash(entity.getPasswordHash())
                 .active(entity.getActive())
                 .accountNonLocked(entity.getAccountNonLocked())
@@ -42,7 +45,7 @@ public class UserMapper {
         if (entity == null) return null;
         return UserUpdateDTO.builder()
                 .id(entity.getId())
-                .username(entity.getUsername())
+                .email(entity.getEmail())
                 .passwordHash(entity.getPasswordHash())
                 .active(entity.getActive())
                 .accountNonLocked(entity.getAccountNonLocked())
@@ -59,18 +62,33 @@ public class UserMapper {
     // --------------------------------------
     public static UserDetailDTO toDetailDTO(User entity) {
         if (entity == null) return null;
-        return new UserDetailDTO(
-                entity.getId(),
-                entity.getUsername(),
-                entity.getPasswordHash(),
-                entity.getActive(),
-                entity.getAccountNonLocked(),
-                entity.getEmailVerified(),
-                entity.getMustChangePassword(),
-                entity.getLastPasswordChange(),
-                entity.getPasswordExpiresAt(),
-                entity.getFailedLoginAttempts()
-        );
+
+        UserDetailDTO dto = new UserDetailDTO();
+        dto.setId(entity.getId());
+        dto.setEmail(entity.getEmail());
+        dto.setPasswordHash(entity.getPasswordHash());
+        dto.setActive(entity.getActive());
+        dto.setAccountNonLocked(entity.getAccountNonLocked());
+        dto.setLastPasswordChange(entity.getLastPasswordChange());
+        dto.setPasswordExpiresAt(entity.getPasswordExpiresAt());
+        dto.setFailedLoginAttempts(entity.getFailedLoginAttempts());
+        dto.setEmailVerified(entity.getEmailVerified());
+        dto.setMustChangePassword(entity.getMustChangePassword());
+
+        // Cargar datos del perfil si existe
+
+        UserProfile profile = entity.getProfile();
+
+        if (profile != null) {
+            dto.setFirstName(profile.getFirstName());
+            dto.setLastName(profile.getLastName());
+            dto.setPhoneNumber(profile.getPhoneNumber());
+            dto.setProfileImage(profile.getProfileImage());
+            dto.setBio(profile.getBio());
+            dto.setLocale(profile.getLocale());
+        }
+
+        return dto;
     }
 
     // --------------------------------------
@@ -79,7 +97,7 @@ public class UserMapper {
     public static User toEntity(UserCreateDTO dto) {
         if (dto == null) return null;
         User entity = new User();
-        entity.setUsername(dto.getUsername());
+        entity.setEmail(dto.getEmail());
         entity.setPasswordHash(dto.getPasswordHash());
         entity.setActive(dto.getActive());
         entity.setAccountNonLocked(dto.getAccountNonLocked());
@@ -95,7 +113,7 @@ public class UserMapper {
         if (dto == null) return null;
         User entity = new User();
         entity.setId(dto.getId()); // importante para update
-        entity.setUsername(dto.getUsername());
+        entity.setEmail(dto.getEmail());
         entity.setPasswordHash(dto.getPasswordHash());
         entity.setActive(dto.getActive());
         entity.setAccountNonLocked(dto.getAccountNonLocked());
@@ -112,7 +130,7 @@ public class UserMapper {
     // --------------------------------------
     public static void copyToExistingEntity(UserUpdateDTO dto, User entity) {
         if (dto == null || entity == null) return;
-        entity.setUsername(dto.getUsername());
+        entity.setEmail(dto.getEmail());
         entity.setPasswordHash(dto.getPasswordHash());
         entity.setActive(dto.getActive());
         entity.setAccountNonLocked(dto.getAccountNonLocked());
