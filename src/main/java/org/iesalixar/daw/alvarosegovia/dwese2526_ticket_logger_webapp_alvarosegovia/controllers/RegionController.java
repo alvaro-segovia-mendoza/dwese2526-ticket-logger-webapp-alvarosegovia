@@ -31,6 +31,11 @@ import java.util.Locale;
 @RequestMapping("/regions")
 public class RegionController {
 
+
+
+    asdasdasdasd
+
+
     // Logger para registrar eventos importantes en el Controller
     private static final Logger logger = LoggerFactory.getLogger(RegionController.class);
 
