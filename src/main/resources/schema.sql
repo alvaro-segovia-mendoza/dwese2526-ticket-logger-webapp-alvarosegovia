@@ -54,3 +54,35 @@ CREATE TABLE IF NOT EXISTS provinces (
    region_id INT NOT NULL,
    FOREIGN KEY (region_id) REFERENCES regions(id)
 );
+
+-- Tabla de roles
+CREATE TABLE IF NOT EXISTS roles (
+                                     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    -- Nombre técnico que usaremos en Spring Security: ROLE_ADMIN, ROLE_USER...
+                                     name VARCHAR(50) NOT NULL UNIQUE,
+    -- Nombre legible para la interfaz
+    display_name VARCHAR(100) NOT NULL,
+    -- Descripción opcional del rol
+    description VARCHAR(255) NULL
+    );
+
+
+-- Tabla intermedia N:M entre users y roles
+CREATE TABLE IF NOT EXISTS user_roles (
+                                          user_id BIGINT NOT NULL,
+                                          role_id BIGINT NOT NULL,
+    -- Clave primaria compuesta: un usuario no puede tener un rol repetido
+                                          CONSTRAINT pk_user_roles PRIMARY KEY (user_id, role_id),
+    -- FK a users
+    CONSTRAINT fk_user_roles_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+    -- FK a roles
+    CONSTRAINT fk_user_roles_role
+    FOREIGN KEY (role_id)
+    REFERENCES roles(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+    );

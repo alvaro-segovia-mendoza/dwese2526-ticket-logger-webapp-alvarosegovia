@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * La clase `User` representa una entidad que modela un user dentro de la base de datos.
@@ -78,4 +80,12 @@ public class User {
     /** Relación 1:1 con la entidad UserProfile */
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private UserProfile profile;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
+    )
+    private Set<Role> roles = new HashSet<>();
 }

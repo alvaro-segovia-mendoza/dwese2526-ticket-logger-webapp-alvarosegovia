@@ -2,10 +2,14 @@ package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvaroseg
 
 import lombok.extern.slf4j.Slf4j;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.*;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Role;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.User;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.UserProfile;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Mapper utilizado entre la entidad {@link User} y sus DTOs.
@@ -19,18 +23,26 @@ public class UserMapper {
     // --------------------------------------
     public static UserDTO toDTO(User entity) {
         if (entity == null) return null;
-        return UserDTO.builder()
-                .id(entity.getId())
-                .email(entity.getEmail())
-                .passwordHash(entity.getPasswordHash())
-                .active(entity.getActive())
-                .accountNonLocked(entity.getAccountNonLocked())
-                .emailVerified(entity.getEmailVerified())
-                .mustChangePassword(entity.getMustChangePassword())
-                .lastPasswordChange(entity.getLastPasswordChange())
-                .passwordExpiresAt(entity.getPasswordExpiresAt())
-                .failedLoginAttempts(entity.getFailedLoginAttempts())
-                .build();
+
+        UserDTO dto = new UserDTO();
+        dto.setId(entity.getId());
+        dto.setEmail(entity.getEmail());
+        dto.setPasswordHash(entity.getPasswordHash());
+        dto.setActive(entity.getActive());
+        dto.setAccountNonLocked(entity.getAccountNonLocked());
+        dto.setLastPasswordChange(entity.getLastPasswordChange());
+        dto.setPasswordExpiresAt(entity.getPasswordExpiresAt());
+        dto.setFailedLoginAttempts(entity.getFailedLoginAttempts());
+        dto.setEmailVerified(entity.getEmailVerified());
+        dto.setMustChangePassword(entity.getMustChangePassword());
+
+        if (entity.getRoles() != null && !entity.getRoles().isEmpty()) {
+            Set<String> roleName = entity.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
+            dto.setRoles(roleName);
+        } else {
+            dto.setRoles(new HashSet<>());
+        }
+        return dto;
     }
 
     public static List<UserDTO> toDTOList(List<User> entities) {
@@ -43,18 +55,26 @@ public class UserMapper {
     // --------------------------------------
     public static UserUpdateDTO toUpdateDTO(User entity) {
         if (entity == null) return null;
-        return UserUpdateDTO.builder()
-                .id(entity.getId())
-                .email(entity.getEmail())
-                .passwordHash(entity.getPasswordHash())
-                .active(entity.getActive())
-                .accountNonLocked(entity.getAccountNonLocked())
-                .emailVerified(entity.getEmailVerified())
-                .mustChangePassword(entity.getMustChangePassword())
-                .lastPasswordChange(entity.getLastPasswordChange())
-                .passwordExpiresAt(entity.getPasswordExpiresAt())
-                .failedLoginAttempts(entity.getFailedLoginAttempts())
-                .build();
+
+        UserUpdateDTO dto = new UserUpdateDTO();
+        dto.setId(entity.getId());
+        dto.setEmail(entity.getEmail());
+        dto.setPasswordHash(entity.getPasswordHash());
+        dto.setActive(entity.getActive());
+        dto.setAccountNonLocked(entity.getAccountNonLocked());
+        dto.setEmailVerified(entity.getEmailVerified());
+        dto.setMustChangePassword(entity.getMustChangePassword());
+        dto.setLastPasswordChange(entity.getLastPasswordChange());
+        dto.setPasswordExpiresAt(entity.getPasswordExpiresAt());
+        dto.setFailedLoginAttempts(entity.getFailedLoginAttempts());
+
+        if (entity.getRoles() != null) {
+            Set<Long> roleIds = entity.getRoles().stream()
+                    .map(Role::getId)
+                    .collect(Collectors.toSet());
+            dto.setRoleIds(roleIds);
+        }
+        return dto;
     }
 
     // --------------------------------------
@@ -88,6 +108,12 @@ public class UserMapper {
             dto.setLocale(profile.getLocale());
         }
 
+        if (entity.getRoles() != null &&  !entity.getRoles().isEmpty()) {
+            Set<String> roleNames = entity.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
+            dto.setRoles(roleNames);
+        } else {
+            dto.setRoles(new HashSet<>());
+        }
         return dto;
     }
 
@@ -140,5 +166,21 @@ public class UserMapper {
         entity.setPasswordExpiresAt(dto.getPasswordExpiresAt());
         entity.setFailedLoginAttempts(dto.getFailedLoginAttempts());
         // No tocar entity.setId() ni relaciones
+    }
+
+    public static User toEntity(UserCreateDTO dto, Set<Role> roles) {
+        if (dto == null) return null;
+
+        User e = toEntity(dto);
+        e.setRoles(roles);
+        return e;
+    }
+
+    public static User toEntity(UserUpdateDTO dto, Set<Role> roles) {
+        if (dto == null) return null;
+
+        User e = toEntity(dto);
+        e.setRoles(roles);
+        return e;
     }
 }

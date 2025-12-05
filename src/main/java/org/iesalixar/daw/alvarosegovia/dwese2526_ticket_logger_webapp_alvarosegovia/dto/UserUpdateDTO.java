@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * DTO para actualizar usuarios.
@@ -46,4 +48,7 @@ public class UserUpdateDTO {
     private LocalDateTime lastPasswordChange; // Si se cambia la contraseña se actualiza
     private LocalDateTime passwordExpiresAt;  // Se recalcula automáticamente
     private Integer failedLoginAttempts;      // Se puede actualizar si es necesario
+
+    @NotEmpty(message = "{msg.user.roles.notempty}")
+    private Set<Long> roleIds = new HashSet<>();
 }

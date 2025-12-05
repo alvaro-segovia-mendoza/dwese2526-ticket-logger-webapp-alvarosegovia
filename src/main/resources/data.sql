@@ -84,3 +84,20 @@ INSERT IGNORE INTO provinces (code, name, region_id) VALUES
 ('50', 'Zaragoza', 2),
 ('51', 'Ceuta', 18),
 ('52', 'Melilla', 18);
+
+       -- Insertar los roles
+INSERT IGNORE INTO roles (id, name, display_name, description) VALUES
+(1, 'ROLE_ADMIN', 'Administrator', 'Acceso total a todas las funcionalidades del sistema'),
+(2, 'ROLE_USER', 'User', 'Usuario estándar'),
+(3, 'ROLE_MANAGER', 'Manager', 'Usuario gestor de la aplicación tiene acceso a las funcionalidades de gestión de datos');
+
+
+INSERT IGNORE INTO user_roles (user_id, role_id) VALUES
+-- Usuario 1: admin completo
+(1, 1),  -- ROLE_ADMIN
+(1, 2),  -- ROLE_USER
+-- Usuario 2: usuario estándar
+(2, 2),  -- ROLE_USER
+-- Usuario 3: manager con permisos de usuario
+(3, 3),  -- ROLE_MANAGER
+(3, 2);  -- ROLE_USER
