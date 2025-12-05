@@ -98,6 +98,22 @@
                     <dt class="col-sm-3" th:text="#{msg.user-detail.profile.field.lastName}"></dt>
                     <dd class="col-sm-9" th:text="${user.lastName}"></dd>
 
+                    <dt class="col-sm-3" th:text="#{msg.user-detail.profile.field.roles}">Roles</dt>
+                    <dd class="col-sm-9">
+                        <ul class="mb-0"
+                            th:if="${user.roles != null and !#lists.isEmpty(user.roles)}">
+                            <li th:each="roleName : ${user.roles}"
+                                th:text="${roleName}">
+                                ROLE_X
+                            </li>
+                        </ul>
+
+                        <span class="text-muted"
+                              th:if="${user.roles == null or #lists.isEmpty(user.roles)}"
+                              th:text="#{msg.user-detail.field.roles.empty}">
+                                This user has no roles assigned.
+                        </span>
+                    </dd>
                     <dt class="col-sm-3" th:text="#{msg.user-detail.profile.field.phoneNumber}"></dt>
                     <dd class="col-sm-9" th:text="${user.phoneNumber}"></dd>
 

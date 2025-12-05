@@ -2,11 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/head :: head('Ticket Logger - User Form')"></head>
 
-<body class="d-flex flex-column min-vh-100 bg-light">
+<body class="d-flex flex-column h-100">
 
 <header th:replace="fragments/header :: header"></header>
 
-<main class="form-page" style="padding-top:100px;">
+<main class="form-page">
     <div class="form-card">
 
         <!-- Título -->
@@ -43,6 +43,21 @@
                 <div th:if="${#fields.hasErrors('passwordHash')}" class="text-danger" th:errors="*{passwordHash}"></div>
             </div>
 
+            <!-- Roles (multi-select obligatorio) -->
+            <div class="mb-3">
+                <label for="roles" class="form-label"
+                       th:text="#{msg.user-form.roles}">Roles</label>
+                <select id="roles"
+                        class="form-select"
+                        multiple
+                        th:field="*{roleIds}">
+
+                    <option th:each="role : ${allRoles}"
+                            th:value="${role.id}"
+                            th:text="${role.displayName} + ' (' + ${role.Name} + ')'">
+                    </option>
+                </select>
+            </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="lastPasswordChange" class="form-label" th:text="#{msg.user-form.lastPasswordChange}">Último Cambio de Contraseña</label>
