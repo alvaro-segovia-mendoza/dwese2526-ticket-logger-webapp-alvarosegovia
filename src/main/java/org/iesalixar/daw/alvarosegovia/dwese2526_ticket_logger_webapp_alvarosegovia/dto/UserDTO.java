@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * Data Transfer Object (DTO) para la entidad User.
@@ -35,5 +36,7 @@ public class UserDTO {
 
     // Número de intentos fallidos de inicio de sesión
     private Integer failedLoginAttempts;
+
+    private Set<String> roles;
 }
 

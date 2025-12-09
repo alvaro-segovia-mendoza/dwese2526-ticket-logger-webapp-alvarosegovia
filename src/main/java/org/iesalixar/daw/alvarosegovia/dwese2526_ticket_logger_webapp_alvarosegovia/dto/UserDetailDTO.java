@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * DTO de detalle para Usuarios.
@@ -47,4 +48,7 @@ public class UserDetailDTO {
     private String bio;
 
     private String locale;
+
+    private Set<String> roles;
+
 }

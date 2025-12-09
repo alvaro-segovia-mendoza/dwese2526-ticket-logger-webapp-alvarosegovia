@@ -1,9 +1,11 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.controllers;
 
 import jakarta.validation.Valid;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.daos.RoleDAO;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.daos.UserDAO;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.*;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Region;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Role;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.User;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.mappers.RegionMapper;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.mappers.UserMapper;
@@ -17,6 +19,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -30,10 +34,14 @@ public class UserController {
 
     // Logger para registrar eventos importantes en el Controller
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+    private static final long PASSWORD_EXPIRY_DAYS = 90;
 
     // DAO para gestionar las operaciones de las regiones en la base de datos
     @Autowired
     private UserDAO userDAO;
+
+    @Autowired
+    private RoleDAO roleDAO;
 
     @Autowired
     private MessageSource messageSource;
@@ -49,6 +57,7 @@ public class UserController {
     public String showNewForm(Model model) {
         logger.info("Mostrando formulario para nuevo usuario.");
         model.addAttribute("user", new UserCreateDTO());
+        model.addAttribute("allRoles", roleDAO.listAllRoles());
         return "views/user/user-form";
     }
 
@@ -61,21 +70,27 @@ public class UserController {
      * @return El nombre de la plantilla Thymeleaf para el formulario o redirección si no existe.
      */
     @GetMapping("/edit")
-    public String showEditForm(@RequestParam("id") Long id, Model model) {
+    public String showEditForm(@RequestParam("id") Long id, Model model, Locale locale) {
         logger.info("Mostrando formulario de edición para la región con ID {}", id);
-        User user = null;
-        UserUpdateDTO userDTO = null;
+
         try {
-            user = userDAO.getUserById(id);
+            User user = userDAO.getUserById(id);
+            UserUpdateDTO userDTO =  UserMapper.toUpdateDTO(user);
             if (userDTO == null) {
                 logger.warn("No se encontró el usuario con ID {}", id);
+                String errorMessage = messageSource.getMessage("msg.user-controller.edit.notfound", null, locale);
+                model.addAttribute("errorMessage", errorMessage);
+                model.addAttribute("user", new UserUpdateDTO());
+            } else {
+                model.addAttribute("user", userDTO);
             }
-            userDTO = UserMapper.toUpdateDTO(user);
         } catch (Exception e) {
             logger.error("Error al obtener el usuario con ID {}: {}", id, e.getMessage());
-            model.addAttribute("errorMessage", "Error al obtener el usuario.");
+            String errorMessage = messageSource.getMessage("msg.user-controller.edit.error", null, locale);
+            model.addAttribute("errorMessage", errorMessage);
+            model.addAttribute("user", new UserUpdateDTO());
         }
-        model.addAttribute("user", userDTO);
+        model.addAttribute("allRoles", roleDAO.listAllRoles());
         return "views/user/user-form"; // Nombre de la plantilla Thymeleaf para el formulario
     }
 
@@ -149,23 +164,35 @@ public class UserController {
     public String insertUser(@Valid @ModelAttribute("user") UserCreateDTO userDTO,
                              BindingResult result,
                              Model model,
-                             Locale locale) {
+                             Locale locale,
+                             RedirectAttributes redirectAttributes) {
 
         logger.info("Insertando nuevo usuario con email {}", userDTO.getEmail());
 
         try {
             if (result.hasErrors()) {
+                model.addAttribute("allRoles", roleDAO.listAllRoles());
                 return "views/user/user-form";
             }
 
             if (userDAO.existsUserByEmail(userDTO.getEmail())) {
-                logger.warn("El nombre de usuario {} ya existe.", userDTO.getEmail());
-                model.addAttribute("errorMessage", messageSource.getMessage(
-                        "msg.user-controller.insert.emailExist", null, locale));
-                return "views/user/user-form";
+                logger.warn("User con email {} existe", userDTO.getEmail());
+                String errorMessage =  messageSource.getMessage("msg.user-controller.insert.emailExist", null, locale);
+                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+                return  "redirect:/users/new";
             }
 
-            User user = UserMapper.toEntity(userDTO);
+            LocalDateTime lastPasswordChange = userDTO.getLastPasswordChange();
+            if (lastPasswordChange == null) {
+                lastPasswordChange = LocalDateTime.now();
+                userDTO.setPasswordExpiresAt(lastPasswordChange);
+            }
+
+            LocalDateTime passwordExpiresAt = lastPasswordChange.plusDays(PASSWORD_EXPIRY_DAYS);
+            userDTO.setPasswordExpiresAt(passwordExpiresAt);
+
+            var roles = new HashSet<>(roleDAO.findByIds(userDTO.getRoleIds()));
+            User user = UserMapper.toEntity(userDTO, roles);
 
             userDAO.insertUser(user);
 
@@ -194,7 +221,7 @@ public class UserController {
     public String updateUser(@Valid @ModelAttribute("user") UserUpdateDTO userDTO,
                              BindingResult result,
                              Model model,
-                             Locale locale) {
+                             Locale locale, RedirectAttributes redirectAttributes) {
 
         logger.info("Actualizando usuario con ID {}", userDTO.getId());
 
@@ -205,30 +232,30 @@ public class UserController {
 
             if (userDAO.existsUserByEmailAndNotId(userDTO.getEmail(), userDTO.getId())) {
                 logger.warn("El correo {} ya existe para otro usuario.", userDTO.getEmail());
-                model.addAttribute("errorMessage", messageSource.getMessage(
-                        "msg.user-controller.update.emailExist", null, locale));
-                return "views/user/user-form";
+                String errorMessage = messageSource.getMessage("msg.user-controller.update.emailExist", null, locale);
+                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+                return "redirect:/users/edit?id=" + userDTO.getId();
             }
 
-            User existingUser = userDAO.getUserById(userDTO.getId());
-            if (existingUser == null) {
-                logger.warn("Usuario con ID {} no encontrado.", userDTO.getId());
-                model.addAttribute("errorMessage", messageSource.getMessage(
-                        "msg.user-controller.update.notFound", null, locale));
-                return "redirect:/users";
+            LocalDateTime lastPasswordChange = userDTO.getLastPasswordChange();
+            if (lastPasswordChange == null) {
+                lastPasswordChange = LocalDateTime.now();
+                userDTO.setLastPasswordChange(lastPasswordChange);
             }
 
-            UserMapper.copyToExistingEntity(userDTO, existingUser);
+            LocalDateTime passwordExpiresAt = lastPasswordChange.plusDays(PASSWORD_EXPIRY_DAYS);
+            userDTO.setPasswordExpiresAt(passwordExpiresAt);
 
-            userDAO.updateUser(existingUser);
+            var roles = new HashSet<>(roleDAO.findByIds(userDTO.getRoleIds()));
+            User user = UserMapper.toEntity(userDTO, roles);
 
-            logger.info("Usuario con ID {} actualizado con éxito.", userDTO.getId());
+            userDAO.updateUser(user);
+            logger.info("Usuario actualizado con ID {} actualizado. Expira el {}", userDTO.getId(), passwordExpiresAt);
 
         } catch (Exception e) {
             logger.error("Error al actualizar el usuario con ID {}: {}", userDTO.getId(), e.getMessage(), e);
-            model.addAttribute("errorMessage", messageSource.getMessage(
-                    "msg.user-controller.update.error", null, locale));
-            return "views/user/user-form";
+            String errorMessage = messageSource.getMessage("msg.user-controller.update.error", null, locale);
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
         }
 
         return "redirect:/users";

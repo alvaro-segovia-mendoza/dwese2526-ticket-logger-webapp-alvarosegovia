@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * DTO para crear usuarios.
@@ -47,5 +49,8 @@ public class UserCreateDTO {
 
     @Min(value=0,message="{msg.user.failedLoginAttempts.min}")
     private Integer failedLoginAttempts;
+
+    @NotEmpty(message = "{msg.user.roles.notempty}")
+    private Set<Long> roleIds = new HashSet<>();
 
 }

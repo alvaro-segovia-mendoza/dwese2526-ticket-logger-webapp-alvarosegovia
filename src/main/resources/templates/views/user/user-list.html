@@ -89,6 +89,8 @@
                             <span class="ms-1" th:if="${sortField=='mustChangePassword'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
+                    <!-- Roles -->
+                    <th th:text="#{msg.user-list.col.roles}">Roles</th>
                     <!-- Actions -->
                     <th th:text="#{msg.user-list.actions}">Acciones</th>
                 </tr>
@@ -122,6 +124,7 @@
                               th:text="${user.mustChangePassword} ? #{msg.user-list.yes} : #{msg.user-list.no}"
                               th:classappend="${user.mustChangePassword} ? 'bg-warning text-dark' : 'bg-secondary'"></span>
                     </td>
+                    <td th:text="${#lists.isEmpty(user.roles)} ? '-' : ${#strings.listJoin(user.roles, ', ')}"></td>
                     <td>
                         <div class="d-flex justify-content-center gap-2 flex-wrap">
                             <!-- Ver detalles -->
