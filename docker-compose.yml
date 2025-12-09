@@ -1,15 +1,91 @@
 services:
   db:
     image: mariadb:latest
+    # Servicio de base de datos MariaDB, usando la última versión disponible.
+
     environment:
       - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
       - MARIADB_DATABASE=${DB_DATABASE}
       - MARIADB_USER=${DB_USER}
       - MARIADB_PASSWORD=${DB_PASSWORD}
+    # Variables de entorno que configuran la base de datos:
+    # - Contraseña del root
+    # - Nombre de la base de datos que se creará
+    # - Usuario y contraseña para la app
+    # Valores tomados del archivo .env
+
     ports:
       - "3306:3306"
+    # Expone el puerto 3306 del contenedor al host (solo necesario si quieres conectarte desde fuera del contenedor)
+
     volumes:
       - db_data:/var/lib/mysql
+    # Volumen persistente para almacenar los datos de MariaDB
+    # Evita perder la información al destruir o recrear contenedores
+
+---
+
+ticket-logger-app:
+  build:
+    context: .
+    dockerfile: Dockerfile
+  # Construye la imagen de la app desde el Dockerfile en el directorio actual
+
+  container_name: ticket-logger-app
+  # Nombre del contenedor (más fácil de identificar)
+
+  env_file: .env
+  # Carga variables de entorno desde el archivo .env
+
+  environment:
+    DB_URL: ${DB_URL}
+    DB_USER: ${DB_USER}
+    DB_PASSWORD: ${DB_PASSWORD}
+    DB_DRIVER: ${DB_DRIVER}
+    APP_UPLOAD_PATH: ${APP_UPLOAD_PATH}
+    APP_PORT: ${APP_PORT}
+  # Variables de entorno adicionales necesarias por la app Spring Boot
+
+  depends_on:
+    - db
+  # Asegura que Docker inicie el servicio de base de datos antes que la app
+  # **Nota:** Esto no garantiza que la base de datos esté lista para conexiones, solo que el contenedor está en marcha
+
+  volumes:
+    - app_uploads:/app
+  # Volumen para persistir archivos generados por la app (uploads, logs, etc.)
+  # Esto asegura que los archivos no se pierdan al recrear contenedores
+
+---
+
+proxy:
+  build:
+    context: ./nginx
+    dockerfile: Dockerfile
+  # Construye la imagen de Nginx desde el Dockerfile ubicado en ./nginx
+
+  container_name: ticket-logger-proxy
+  # Nombre del contenedor del proxy
+
+  depends_on:
+    - ticket-logger-app
+  # Se asegura de iniciar la app antes del proxy (aunque la app puede tardar en estar lista)
+
+  ports:
+    - "80:80"
+    - "443:443"
+  # Expone HTTP y HTTPS hacia el host
+
+  volumes:
+    - certs:/etc/nginx/certs:rw
+  # Volumen para almacenar certificados TLS/SSL
+  # Permite persistencia de certificados autofirmados o personalizados
+
+---
 
 volumes:
   db_data:
+  app_uploads:
+  certs:
+# Definición de los volúmenes persistentes usados por los servicios
+# Docker creará directorios en /var/lib/docker/volumes/ para cada uno de ellos

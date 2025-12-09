@@ -50,6 +50,8 @@
                     <small class="form-text text-muted" th:text="#{msg.userProfile.field.profileImageUpload.help}"></small>
                     <div th:if="${#fields.hasErrors('profileImage')}" class="text-danger" th:errors="*{profileImage}"></div>
                 </div>
+
+
                 <div class="mb-3">
                     <label for="email" class="form-label" th:text="#{msg.userProfile.field.email}"></label>
                     <input type="text" id="email" th:field="*{email}" class="form-control" readonly>
