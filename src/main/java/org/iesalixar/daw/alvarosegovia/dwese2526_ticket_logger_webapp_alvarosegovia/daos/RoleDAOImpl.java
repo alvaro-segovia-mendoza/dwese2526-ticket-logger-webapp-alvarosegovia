@@ -38,7 +38,7 @@ public class RoleDAOImpl implements  RoleDAO
         }
 
         logger.info("Finding roles by ids: {}", ids);
-        String hql = "SELECT r FROM Role r WHERE r.ids = :ids";
+        String hql = "SELECT r FROM Role r WHERE r.id IN :ids";
         List<Role> roles = em.createQuery(hql, Role.class).setParameter("ids", ids).getResultList();
         logger.info("Found {} matching the given ids.", roles.size());
         return roles;
