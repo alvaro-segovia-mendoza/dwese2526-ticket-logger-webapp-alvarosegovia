@@ -37,6 +37,7 @@ public class UserDTO {
     // Número de intentos fallidos de inicio de sesión
     private Integer failedLoginAttempts;
 
+    // Set de roles que se asignarán al usuario
     private Set<String> roles;
 }
 

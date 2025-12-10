@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head('Ticket Logger - User Profile Form')"></head>
+<head th:replace="fragments/head :: head('Ticket Logger - User Profile Form')">
+    <!-- Fragmento head reutilizable con título dinámico para la página -->
+</head>
 
 <body class="d-flex flex-column min-vh-100 bg-light">
 
 <div class="content-wrapper">
 
-    <!-- HEADER -->
+    <!-- ───────────── HEADER ───────────── -->
     <header th:replace="fragments/header :: header"></header>
+    <!-- Inserta el header común del sitio -->
 
-    <!-- MAIN -->
+    <!-- ───────────── MAIN ───────────── -->
     <main class="form-page">
         <div class="form-card">
 
@@ -19,7 +22,7 @@
                      class="img-thumbnail rounded" style="max-width: 150px;">
             </div>
 
-            <!-- Título -->
+            <!-- Título y subtítulo de la sección -->
             <h1 th:text="#{msg.userProfile.title}"></h1>
             <p class="text-muted" th:text="#{msg.userProfile.subtitle}"></p>
 
@@ -27,18 +30,19 @@
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
             <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
-            <!-- Formulario -->
+            <!-- ───────────── FORMULARIO ───────────── -->
             <form th:action="@{/profile/update}"
                   th:object="${userProfileForm}"
                   enctype="multipart/form-data"
                   method="post"
                   class="mt-3">
 
-                <!-- ID oculto -->
+                <!-- ID oculto para identificar al usuario -->
                 <input type="hidden" th:field="*{userId}"/>
 
-                <!-- Campos -->
+                <!-- Campos del formulario -->
 
+                <!-- Subida de imagen de perfil -->
                 <div class="mb-3">
                     <label for="profileImageFile" class="form-label"
                            th:text="#{msg.userProfile.field.profileImageUpload}"></label>
@@ -50,60 +54,66 @@
                     <small class="form-text text-muted" th:text="#{msg.userProfile.field.profileImageUpload.help}"></small>
                     <div th:if="${#fields.hasErrors('profileImage')}" class="text-danger" th:errors="*{profileImage}"></div>
                 </div>
+
+                <!-- Email (solo lectura) -->
                 <div class="mb-3">
                     <label for="email" class="form-label" th:text="#{msg.userProfile.field.email}"></label>
                     <input type="text" id="email" th:field="*{email}" class="form-control" readonly>
                     <div th:if="${#fields.hasErrors('email')}" class="text-danger" th:errors="*{email}"></div>
                 </div>
 
+                <!-- Nombre -->
                 <div class="mb-3">
                     <label for="firstName" class="form-label" th:text="#{msg.userProfile.field.firstName}"></label>
                     <input type="text" id="firstName" th:field="*{firstName}" class="form-control" />
                     <div th:if="${#fields.hasErrors('firstName')}" class="text-danger" th:errors="*{firstName}"></div>
                 </div>
 
+                <!-- Apellido -->
                 <div class="mb-3">
                     <label for="lastName" class="form-label" th:text="#{msg.userProfile.field.lastName}"></label>
                     <input type="text" id="lastName" th:field="*{lastName}" class="form-control" />
                     <div th:if="${#fields.hasErrors('lastName')}" class="text-danger" th:errors="*{lastName}"></div>
                 </div>
 
+                <!-- Teléfono -->
                 <div class="mb-3">
                     <label for="phoneNumber" class="form-label" th:text="#{msg.userProfile.field.phoneNumber}"></label>
                     <input type="text" id="phoneNumber" th:field="*{phoneNumber}" class="form-control" />
                     <div th:if="${#fields.hasErrors('phoneNumber')}" class="text-danger" th:errors="*{phoneNumber}"></div>
                 </div>
 
+                <!-- URL de imagen -->
                 <div class="mb-3">
                     <label for="profileImage" class="form-label" th:text="#{msg.userProfile.field.profileImage}"></label>
                     <input type="text" id="profileImage" th:field="*{profileImage}" class="form-control" />
                     <div th:if="${#fields.hasErrors('profileImage')}" class="text-danger" th:errors="*{profileImage}"></div>
                 </div>
 
+                <!-- Biografía -->
                 <div class="mb-3">
                     <label for="bio" class="form-label" th:text="#{msg.userProfile.field.bio}"></label>
                     <textarea id="bio" th:field="*{bio}" class="form-control"></textarea>
                     <div th:if="${#fields.hasErrors('bio')}" class="text-danger" th:errors="*{bio}"></div>
                 </div>
 
+                <!-- Localización/idioma -->
                 <div class="mb-3">
                     <label for="locale" class="form-label" th:text="#{msg.userProfile.field.locale}"></label>
                     <input type="text" id="locale" th:field="*{locale}" class="form-control" />
                     <div th:if="${#fields.hasErrors('locale')}" class="text-danger" th:errors="*{locale}"></div>
                 </div>
 
-                <!-- Botones -->
+                <!-- Botones de acción -->
                 <button type="submit" class="btn btn-primary" th:text="#{msg.userProfile.action.save}"></button>
                 <a th:href="@{/}" class="btn btn-secondary mt-2" th:text="#{msg.userProfile.action.back}"></a>
 
             </form>
-
         </div>
     </main>
-
 </div>
 
-<!-- FOOTER -->
+<!-- ───────────── FOOTER Y SCRIPTS ───────────── -->
 <footer th:replace="fragments/footer :: footer"></footer>
 <div th:replace="fragments/scripts :: scripts"></div>
 

@@ -22,7 +22,7 @@ public class UserMapper {
     // Entity -> DTO (básico)
     // --------------------------------------
     public static UserDTO toDTO(User entity) {
-        if (entity == null) return null;
+        if (entity == null) return null; // Si la entidad es null, devolvemos null
 
         UserDTO dto = new UserDTO();
         dto.setId(entity.getId());
@@ -36,15 +36,19 @@ public class UserMapper {
         dto.setEmailVerified(entity.getEmailVerified());
         dto.setMustChangePassword(entity.getMustChangePassword());
 
+        // Convertimos roles de entidad a nombres de roles en DTO
         if (entity.getRoles() != null && !entity.getRoles().isEmpty()) {
-            Set<String> roleName = entity.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
+            Set<String> roleName = entity.getRoles().stream()
+                    .map(Role::getName)
+                    .collect(Collectors.toSet());
             dto.setRoles(roleName);
         } else {
-            dto.setRoles(new HashSet<>());
+            dto.setRoles(new HashSet<>()); // Si no hay roles, inicializamos vacío
         }
         return dto;
     }
 
+    // Convertir lista de entidades a lista de DTOs
     public static List<UserDTO> toDTOList(List<User> entities) {
         if (entities == null) return List.of();
         return entities.stream().map(UserMapper::toDTO).toList();
@@ -68,6 +72,7 @@ public class UserMapper {
         dto.setPasswordExpiresAt(entity.getPasswordExpiresAt());
         dto.setFailedLoginAttempts(entity.getFailedLoginAttempts());
 
+        // Convertimos roles de entidad a IDs de roles en DTO
         if (entity.getRoles() != null) {
             Set<Long> roleIds = entity.getRoles().stream()
                     .map(Role::getId)
@@ -96,9 +101,7 @@ public class UserMapper {
         dto.setMustChangePassword(entity.getMustChangePassword());
 
         // Cargar datos del perfil si existe
-
         UserProfile profile = entity.getProfile();
-
         if (profile != null) {
             dto.setFirstName(profile.getFirstName());
             dto.setLastName(profile.getLastName());
@@ -108,8 +111,11 @@ public class UserMapper {
             dto.setLocale(profile.getLocale());
         }
 
-        if (entity.getRoles() != null &&  !entity.getRoles().isEmpty()) {
-            Set<String> roleNames = entity.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
+        // Roles como nombres
+        if (entity.getRoles() != null && !entity.getRoles().isEmpty()) {
+            Set<String> roleNames = entity.getRoles().stream()
+                    .map(Role::getName)
+                    .collect(Collectors.toSet());
             dto.setRoles(roleNames);
         } else {
             dto.setRoles(new HashSet<>());
@@ -122,6 +128,7 @@ public class UserMapper {
     // --------------------------------------
     public static User toEntity(UserCreateDTO dto) {
         if (dto == null) return null;
+
         User entity = new User();
         entity.setEmail(dto.getEmail());
         entity.setPasswordHash(dto.getPasswordHash());
@@ -137,8 +144,9 @@ public class UserMapper {
 
     public static User toEntity(UserUpdateDTO dto) {
         if (dto == null) return null;
+
         User entity = new User();
-        entity.setId(dto.getId()); // importante para update
+        entity.setId(dto.getId()); // Importante para actualizar
         entity.setEmail(dto.getEmail());
         entity.setPasswordHash(dto.getPasswordHash());
         entity.setActive(dto.getActive());
@@ -156,6 +164,8 @@ public class UserMapper {
     // --------------------------------------
     public static void copyToExistingEntity(UserUpdateDTO dto, User entity) {
         if (dto == null || entity == null) return;
+
+        // Actualizamos los campos editables
         entity.setEmail(dto.getEmail());
         entity.setPasswordHash(dto.getPasswordHash());
         entity.setActive(dto.getActive());
@@ -165,14 +175,18 @@ public class UserMapper {
         entity.setLastPasswordChange(dto.getLastPasswordChange());
         entity.setPasswordExpiresAt(dto.getPasswordExpiresAt());
         entity.setFailedLoginAttempts(dto.getFailedLoginAttempts());
-        // No tocar entity.setId() ni relaciones
+
+        // NO tocar entity.setId() ni relaciones
     }
 
+    // --------------------------------------
+    // DTO + Roles -> Entity
+    // --------------------------------------
     public static User toEntity(UserCreateDTO dto, Set<Role> roles) {
         if (dto == null) return null;
 
         User e = toEntity(dto);
-        e.setRoles(roles);
+        e.setRoles(roles); // Asignamos roles
         return e;
     }
 

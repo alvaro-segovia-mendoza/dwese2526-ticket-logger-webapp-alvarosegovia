@@ -1,58 +1,79 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head('Ticket Logger - User Detail')"></head>
+<head th:replace="fragments/head :: head('Ticket Logger - User Detail')">
+    <!-- Inserta el fragmento 'head' y establece el título dinámico de la página -->
+</head>
 
 <body class="d-flex flex-column h-100">
 
-<!-- Insertar el fragmento del header -->
+<!-- ───────────── HEADER ───────────── -->
 <header th:replace="fragments/header :: header"></header>
+<!-- Inserta el fragmento del header común a todas las páginas -->
 
-<!-- Contenido dinámico -->
+<!-- ───────────── CONTENIDO PRINCIPAL ───────────── -->
 <main class="detail-page">
     <div class="detail-card">
 
         <br><br>
-        <!-- Título con i18n -->
+
+        <!-- Título de la página con i18n -->
         <h1 th:text="#{msg.user-detail.title}">Detalle del Usuario</h1>
 
-        <!-- Mensaje de error -->
+        <!-- Mensaje de error general -->
         <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
-        <!-- Detalles del usuario -->
+        <!-- ───────────── DETALLES BÁSICOS DEL USUARIO ───────────── -->
         <table class="table table-bordered table-striped mt-3">
             <tbody>
+            <!-- ID del usuario -->
             <tr>
                 <th th:text="#{msg.user-detail.id}">ID</th>
                 <td th:text="${user.id}"></td>
             </tr>
+
+            <!-- Email del usuario -->
             <tr>
                 <th th:text="#{msg.user-detail.email}">Email</th>
                 <td th:text="${user.email}"></td>
             </tr>
+
+            <!-- Estado activo -->
             <tr>
                 <th th:text="#{msg.user-detail.active}">Activo</th>
                 <td th:text="${user.active} ? 'Sí' : 'No'"></td>
             </tr>
+
+            <!-- Cuenta no bloqueada -->
             <tr>
                 <th th:text="#{msg.user-detail.accountNonLocked}">Cuenta No Bloqueada</th>
                 <td th:text="${user.accountNonLocked} ? 'Sí' : 'No'"></td>
             </tr>
+
+            <!-- Email verificado -->
             <tr>
                 <th th:text="#{msg.user-detail.emailVerified}">Email Verificado</th>
                 <td th:text="${user.emailVerified} ? 'Sí' : 'No'"></td>
             </tr>
+
+            <!-- Debe cambiar contraseña -->
             <tr>
                 <th th:text="#{msg.user-detail.mustChangePassword}">Debe Cambiar Contraseña</th>
                 <td th:text="${user.mustChangePassword} ? 'Sí' : 'No'"></td>
             </tr>
+
+            <!-- Último cambio de contraseña -->
             <tr>
                 <th th:text="#{msg.user-detail.lastPasswordChange}">Último Cambio de Contraseña</th>
                 <td th:text="${user.lastPasswordChange}"></td>
             </tr>
+
+            <!-- Fecha de expiración de contraseña -->
             <tr>
                 <th th:text="#{msg.user-detail.passwordExpiresAt}">Contraseña Expira En</th>
                 <td th:text="${user.passwordExpiresAt}"></td>
             </tr>
+
+            <!-- Intentos fallidos de login -->
             <tr>
                 <th th:text="#{msg.user-detail.failedLoginAttempts}">Intentos Fallidos</th>
                 <td th:text="${user.failedLoginAttempts}"></td>
@@ -60,12 +81,14 @@
             </tbody>
         </table>
 
-        <!-- Botones de acción -->
+        <!-- ───────────── BOTONES DE ACCIÓN ───────────── -->
         <div class="mt-3">
+            <!-- Botón Editar -->
             <a th:href="@{/users/edit(id=${user.id})}" class="btn btn-primary me-2" th:text="#{msg.user-detail.edit}">
                 Editar
             </a>
 
+            <!-- Botón Eliminar -->
             <form th:action="@{/users/delete}" method="post" class="d-inline">
                 <input type="hidden" name="id" th:value="${user.id}"/>
                 <button type="submit" class="btn btn-danger"
@@ -75,60 +98,61 @@
                 </button>
             </form>
 
+            <!-- Botón Volver -->
             <a th:href="@{/users}" class="btn btn-secondary ms-2" th:text="#{msg.user-detail.returnback}">
                 Volver a la lista
             </a>
         </div>
+
+        <!-- ───────────── PERFIL DEL USUARIO ───────────── -->
         <div class="mt-4">
             <h2 class="h5" th:text="#{msg.user-detail.section.profileData}">Perfil de usuario</h2>
 
-            <!-- Si no hay datos de perfil (todos los campos de perfil son null) -->
+            <!-- Mensaje si el usuario no tiene perfil -->
             <div th:if="${user.firstName == null and user.lastName == null and user.phoneNumber == null and user.profileImage == null and user.bio == null and user.locale == null}" class="alert alert-info">
                 Este usuario no tiene perfil asociado.
             </div>
 
-
-            <!-- Si hay algún dato de perfil -->
+            <!-- Mostrar datos de perfil si existen -->
             <div th:if="${user.firstName != null or user.lastName != null or user.phoneNumber != null or user.profileImage != null or user.bio != null or user.locale != null}">
                 <dl class="row">
-
+                    <!-- Nombre -->
                     <dt class="col-sm-3" th:text="#{msg.user-detail.profile.field.firstName}"></dt>
                     <dd class="col-sm-9" th:text="${user.firstName}"></dd>
 
+                    <!-- Apellidos -->
                     <dt class="col-sm-3" th:text="#{msg.user-detail.profile.field.lastName}"></dt>
                     <dd class="col-sm-9" th:text="${user.lastName}"></dd>
 
+                    <!-- Roles -->
                     <dt class="col-sm-3" th:text="#{msg.user-detail.profile.field.roles}">Roles</dt>
                     <dd class="col-sm-9">
-                        <ul class="mb-0"
-                            th:if="${user.roles != null and !#lists.isEmpty(user.roles)}">
-                            <li th:each="roleName : ${user.roles}"
-                                th:text="${roleName}">
-                                ROLE_X
-                            </li>
+                        <ul class="mb-0" th:if="${user.roles != null and !#lists.isEmpty(user.roles)}">
+                            <li th:each="roleName : ${user.roles}" th:text="${roleName}">ROLE_X</li>
                         </ul>
-
-                        <span class="text-muted"
-                              th:if="${user.roles == null or #lists.isEmpty(user.roles)}"
-                              th:text="#{msg.user-detail.field.roles.empty}">
-                                This user has no roles assigned.
+                        <span class="text-muted" th:if="${user.roles == null or #lists.isEmpty(user.roles)}" th:text="#{msg.user-detail.field.roles.empty}">
+                            This user has no roles assigned.
                         </span>
                     </dd>
+
+                    <!-- Teléfono -->
                     <dt class="col-sm-3" th:text="#{msg.user-detail.profile.field.phoneNumber}"></dt>
                     <dd class="col-sm-9" th:text="${user.phoneNumber}"></dd>
 
+                    <!-- Locale / Idioma -->
                     <dt class="col-sm-3" th:text="#{msg.user-detail.profile.field.locale}"></dt>
                     <dd class="col-sm-9" th:text="${user.locale}"></dd>
 
+                    <!-- Imagen de perfil -->
                     <dt class="col-sm-3" th:text="#{msg.user-detail.profile.field.profileImage}"></dt>
                     <dd class="col-sm-9">
+                        <!-- Sin imagen -->
                         <div th:if="${user.profileImage == null}">
                             <span class="text-muted" th:text="#{msg.user-detail.profile.noImage}"></span>
                         </div>
-
+                        <!-- Con imagen -->
                         <div th:if="${user.profileImage != null}">
-                            <img th:src="${user.profileImage}" alt="Foto perfil" class="img-thumbnail rounded"
-                                 style="max-width: 150px;"/>
+                            <img th:src="${user.profileImage}" alt="Foto perfil" class="img-thumbnail rounded" style="max-width: 150px;"/>
                         </div>
                     </dd>
                 </dl>
@@ -138,9 +162,11 @@
     </div>
 </main>
 
-<!-- Insertar el fragmento del footer -->
+<!-- ───────────── FOOTER ───────────── -->
 <footer th:replace="fragments/footer :: footer"></footer>
+<!-- Inserta el footer común -->
 
+<!-- Scripts JS comunes -->
 <div th:replace="fragments/scripts :: scripts"></div>
 
 </body>
