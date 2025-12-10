@@ -26,24 +26,24 @@ public class UserProfileFormDTO {
 
     /** VARCHAR(60) NOT NULL */
     @NotBlank(message = "{msg.userProfile.firstName.notblank}")
-    @Size(max = 60, message = "{msg.userProfile.firstName.size")
+    @Size(max = 60, message = "{msg.userProfile.firstName.size}")
     private String firstName;
 
     /** VARCHAR(80) NOT NULL */
     @NotBlank(message = "{msg.userProfile.lastName.notblank}")
-    @Size(max = 80, message = "{msg.userProfile.lastName.size")
+    @Size(max = 80, message = "{msg.userProfile.lastName.size}")
     private String lastName;
 
     /** VARCHAR(30) NULL */
-    @Size(max = 30, message = "{msg.userProfile.phoneNumber.size")
+    @Size(max = 30, message = "{msg.userProfile.phoneNumber.size}")
     private String phoneNumber;
 
     /** VARCHAR(255) NULL - Ruta/URL de la imagen del perfil */
-    @Size(max = 255, message = "{msg.userProfile.profileImage.size")
+    @Size(max = 255, message = "{msg.userProfile.profileImage.size}")
     private String profileImage;
 
     /** VARCHAR(500) NULL - Pequeña descripción / biografía */
-    @Size(max = 500, message = "{msg.userProfile.bio.size")
+    @Size(max = 500, message = "{msg.userProfile.bio.size}")
     private String bio;
 
     /** VARCHAR(10) NULL - Código idioma/locale (es_ES, en_ES...) */

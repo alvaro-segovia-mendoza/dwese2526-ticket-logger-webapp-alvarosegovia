@@ -227,6 +227,7 @@ public class UserController {
 
         try {
             if (result.hasErrors()) {
+                model.addAttribute("allRoles", roleDAO.listAllRoles());
                 return "views/user/user-form";
             }
 
@@ -260,6 +261,7 @@ public class UserController {
 
         return "redirect:/users";
     }
+
 
 
     /**

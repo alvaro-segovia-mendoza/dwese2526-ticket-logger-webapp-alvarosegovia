@@ -1,44 +1,50 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head ('Ticket Logger - Users List')"></head>
+<head th:replace="fragments/head :: head ('Ticket Logger - Users List')">
+    <!-- Fragmento head reutilizable, con título dinámico para la página -->
+</head>
 
 <body class="d-flex flex-column h-100">
 
+<!-- ───────────── HEADER ───────────── -->
 <header th:replace="fragments/header :: header"></header>
+<!-- Inserta el header común del sitio -->
 
+<!-- ───────────── CONTENIDO PRINCIPAL ───────────── -->
 <main class="list-page">
     <div class="list-card" style="max-width:1500px">
+
+        <!-- Título principal -->
         <h1 th:text="#{msg.user-list.title}" class="mb-4">Listado de Usuarios</h1>
 
-        <!-- Botón de agregar -->
+        <!-- Botón para agregar nuevo usuario -->
         <a th:href="@{/users/new}" class="btn btn-success mb-3">
             <i class="bi bi-person-plus-fill me-2"></i>
             <span th:text="#{msg.user-list.add}">Agregar Nuevo Usuario</span>
         </a>
 
-        <!-- Mensaje de error -->
+        <!-- Mensaje global de error -->
         <div th:if="${errorMessage}" class="alert alert-danger text-center mb-3" th:text="${errorMessage}"></div>
 
-        <!-- Tabla con scroll horizontal -->
+        <!-- ───────────── TABLA DE USUARIOS ───────────── -->
         <div style="overflow-x:auto;">
             <table class="table table-striped table-bordered table-hover align-middle text-center" style="min-width:1200px;">
                 <thead class="table-dark">
                 <tr>
-                    <!-- ID -->
+                    <!-- Cabeceras con ordenamiento por columna -->
                     <th>
                         <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='id', sortDir=${(sortField=='id')?reverseSortDir:'asc'})}" class="text-decoration-none">
                             <span th:text="#{msg.user-list.id}">ID</span>
                             <span class="ms-1" th:if="${sortField=='id'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-                    <!-- Email -->
                     <th>
                         <a th:href="@{/users(page=${currentPage}, size=${pageSize}, sortField='email', sortDir=${(sortField=='email')?reverseSortDir:'asc'})}" class="text-decoration-none">
                             <span th:text="#{msg.user-list.email}">Email</span>
                             <span class="ms-1" th:if="${sortField=='email'}" th:text="${sortDir=='asc'}?'▲':'▼'"></span>
                         </a>
                     </th>
-                    <!-- Password (asteriscos) -->
+                    <!-- Contraseña (no visible) -->
                     <th th:text="#{msg.user-list.passwordHash}">Contraseña</th>
                     <!-- Active -->
                     <th>
@@ -97,16 +103,19 @@
                 </thead>
 
                 <tbody>
+                <!-- Iteración sobre los usuarios -->
                 <tr th:each="user : ${listUsers}">
                     <td th:text="${user.id}"></td>
                     <td th:text="${user.email}"></td>
                     <td class="text-break" style="max-width:180px;">********</td>
                     <td>
+                        <!-- Badge para estado activo -->
                         <span class="badge rounded-pill px-3 py-2"
                               th:text="${user.active} ? #{msg.user-list.yes} : #{msg.user-list.no}"
                               th:classappend="${user.active} ? 'bg-success' : 'bg-danger'"></span>
                     </td>
                     <td>
+                        <!-- Badge para cuenta desbloqueada -->
                         <span class="badge rounded-pill px-3 py-2"
                               th:text="${user.accountNonLocked} ? #{msg.user-list.yes} : #{msg.user-list.no}"
                               th:classappend="${user.accountNonLocked} ? 'bg-success' : 'bg-danger'"></span>
@@ -124,16 +133,13 @@
                               th:text="${user.mustChangePassword} ? #{msg.user-list.yes} : #{msg.user-list.no}"
                               th:classappend="${user.mustChangePassword} ? 'bg-warning text-dark' : 'bg-secondary'"></span>
                     </td>
+                    <!-- Lista de roles -->
                     <td th:text="${#lists.isEmpty(user.roles)} ? '-' : ${#strings.listJoin(user.roles, ', ')}"></td>
+                    <!-- Botones de acción -->
                     <td>
                         <div class="d-flex justify-content-center gap-2 flex-wrap">
-                            <!-- Ver detalles -->
-                            <a th:href="@{/users/detail(id=${user.id})}"
-                               class="btn btn-outline-secondary btn-sm me-1"
-                               th:text="#{msg.user-list.viewDetail}">Ver</a>
-
+                            <a th:href="@{/users/detail(id=${user.id})}" class="btn btn-outline-secondary btn-sm" th:text="#{msg.user-list.viewDetail}">Ver</a>
                             <a th:href="@{/users/edit(id=${user.id})}" class="btn btn-primary btn-sm" th:text="#{msg.user-list.edit}">Editar</a>
-
                             <form th:action="@{/users/delete}" method="post" class="d-inline">
                                 <input type="hidden" name="id" th:value="${user.id}"/>
                                 <button type="submit" class="btn btn-danger btn-sm"
@@ -147,13 +153,14 @@
             </table>
         </div>
 
-        <!-- Paginación -->
+        <!-- ───────────── PAGINACIÓN ───────────── -->
         <div class="d-flex justify-content-between align-items-center mt-3" th:if="${totalPages > 0}">
             <div>
                 <span th:text="#{msg.pagination.info(${currentPage} + 1, ${totalPages}, ${totalElements})}"></span>
             </div>
             <nav th:aria-label="#{msg.pagination.aria.label}">
                 <ul class="pagination mb-0">
+                    <!-- Página anterior -->
                     <li class="page-item" th:classappend="${currentPage==0}? 'disabled'">
                         <a class="page-link"
                            th:href="@{/users(page=${currentPage-1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir})}"
@@ -161,9 +168,11 @@
                             <span aria-hidden="true">&laquo;</span>
                         </a>
                     </li>
+                    <!-- Números de página -->
                     <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages-1)}" th:classappend="${i==currentPage}? 'active'">
                         <a class="page-link" th:text="${i+1}" th:href="@{/users(page=${i}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir})}"></a>
                     </li>
+                    <!-- Página siguiente -->
                     <li class="page-item" th:classappend="${currentPage==totalPages-1}? 'disabled'">
                         <a class="page-link"
                            th:href="@{/users(page=${currentPage+1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir})}"
@@ -180,6 +189,7 @@
     </div>
 </main>
 
+<!-- ───────────── FOOTER Y SCRIPTS ───────────── -->
 <footer th:replace="fragments/footer :: footer"></footer>
 <div th:replace="fragments/scripts :: scripts"></div>
 
