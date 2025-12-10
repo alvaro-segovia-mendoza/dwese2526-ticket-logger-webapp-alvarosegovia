@@ -23,65 +23,59 @@ services:
     # Volumen persistente para almacenar los datos de MariaDB
     # Evita perder la información al destruir o recrear contenedores
 
----
+  ticket-logger-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Construye la imagen de la app desde el Dockerfile en el directorio actual
 
-ticket-logger-app:
-  build:
-    context: .
-    dockerfile: Dockerfile
-  # Construye la imagen de la app desde el Dockerfile en el directorio actual
+    container_name: ticket-logger-app
+    # Nombre del contenedor (más fácil de identificar)
 
-  container_name: ticket-logger-app
-  # Nombre del contenedor (más fácil de identificar)
+    env_file: .env
+    # Carga variables de entorno desde el archivo .env
 
-  env_file: .env
-  # Carga variables de entorno desde el archivo .env
+    environment:
+      DB_URL: ${DB_URL}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DRIVER: ${DB_DRIVER}
+      APP_UPLOAD_PATH: ${APP_UPLOAD_PATH}
+      APP_PORT: ${APP_PORT}
+    # Variables de entorno adicionales necesarias por la app Spring Boot
 
-  environment:
-    DB_URL: ${DB_URL}
-    DB_USER: ${DB_USER}
-    DB_PASSWORD: ${DB_PASSWORD}
-    DB_DRIVER: ${DB_DRIVER}
-    APP_UPLOAD_PATH: ${APP_UPLOAD_PATH}
-    APP_PORT: ${APP_PORT}
-  # Variables de entorno adicionales necesarias por la app Spring Boot
+    depends_on:
+      - db
+    # Asegura que Docker inicie el servicio de base de datos antes que la app
+    # **Nota:** Esto no garantiza que la base de datos esté lista para conexiones, solo que el contenedor está en marcha
 
-  depends_on:
-    - db
-  # Asegura que Docker inicie el servicio de base de datos antes que la app
-  # **Nota:** Esto no garantiza que la base de datos esté lista para conexiones, solo que el contenedor está en marcha
+    volumes:
+      - app_uploads:/app
+    # Volumen para persistir archivos generados por la app (uploads, logs, etc.)
+    # Esto asegura que los archivos no se pierdan al recrear contenedores
 
-  volumes:
-    - app_uploads:/app
-  # Volumen para persistir archivos generados por la app (uploads, logs, etc.)
-  # Esto asegura que los archivos no se pierdan al recrear contenedores
+  proxy:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    # Construye la imagen de Nginx desde el Dockerfile ubicado en ./nginx
 
----
+    container_name: ticket-logger-proxy
+    # Nombre del contenedor del proxy
 
-proxy:
-  build:
-    context: ./nginx
-    dockerfile: Dockerfile
-  # Construye la imagen de Nginx desde el Dockerfile ubicado en ./nginx
+    depends_on:
+      - ticket-logger-app
+    # Se asegura de iniciar la app antes del proxy (aunque la app puede tardar en estar lista)
 
-  container_name: ticket-logger-proxy
-  # Nombre del contenedor del proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    # Expone HTTP y HTTPS hacia el host
 
-  depends_on:
-    - ticket-logger-app
-  # Se asegura de iniciar la app antes del proxy (aunque la app puede tardar en estar lista)
-
-  ports:
-    - "80:80"
-    - "443:443"
-  # Expone HTTP y HTTPS hacia el host
-
-  volumes:
-    - certs:/etc/nginx/certs:rw
-  # Volumen para almacenar certificados TLS/SSL
-  # Permite persistencia de certificados autofirmados o personalizados
-
----
+    volumes:
+      - certs:/etc/nginx/certs:rw
+    # Volumen para almacenar certificados TLS/SSL
+    # Permite persistencia de certificados autofirmados o personalizados
 
 volumes:
   db_data:
