@@ -1,6 +1,8 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.controllers;
 
 import jakarta.validation.Valid;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.exeptions.DuplicateResourceException;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.exeptions.ResourceNotFoundException;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.repositories.RegionRepository;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.RegionCreateDTO;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.RegionDTO;
@@ -8,6 +10,7 @@ import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosego
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.RegionUpdateDTO;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Region;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.mappers.RegionMapper;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.services.RegionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +41,8 @@ public class RegionController {
     // Logger para registrar eventos importantes en el Controller
     private static final Logger logger = LoggerFactory.getLogger(RegionController.class);
 
-    // DAO para gestionar las operaciones de las regiones en la base de datos
     @Autowired
-    private RegionRepository regionRepository;
+    private RegionService regionService;
 
     @Autowired
     private MessageSource messageSource;
@@ -119,26 +121,20 @@ public class RegionController {
      * @return nombre de la plantilla Thymeleaf que renderiza el formulario de edición de regiones
      */
     @GetMapping("/edit")
-    public String showEditForm(@RequestParam("id") Long id, Model model, Locale locale) {
+    public String showEditForm(@RequestParam("id") Long id, Model model, RedirectAttributes redirectAttributes, Locale locale) {
         logger.info("Mostrando formulario de edición para la región con ID {}", id);
-        Optional<Region> regionOpt;
-        RegionUpdateDTO regionDTO = null;
+
         try {
+            RegionUpdateDTO regionDTO = regionService.getForEdit(id);
+            model.addAttribute("region", regionDTO);
 
-            // Spring Data: findById devuelve Optional
-            regionOpt = regionRepository.findById(id);
+            return "views/region/region-form";
 
-            if (regionOpt.isEmpty()) {
-                logger.warn("No se encontró la región con ID {}", id);
-                String msg = messageSource.getMessage("msg.region.error.notfound",
-                        new Object[]{id},
-                        locale
-                );
-                model.addAttribute("errorMessage", msg);
-            } else {
-                Region region = regionOpt.get();
-                regionDTO = RegionMapper.toUpdateDTO(region);
-            }
+        } catch (ResourceNotFoundException ex) {
+            logger.warn("No se encontró la región con ID {}", id);
+            String msg = messageSource.getMessage("msg.region.error.notfound", new Object[]{id}, locale);
+            redirectAttributes.addFlashAttribute("errorMessage", msg);
+            return "redirect:/regions";
 
         } catch (Exception e) {
             logger.error("Error al obtener la región con ID {}: {}", id, e.getMessage(), e);
@@ -147,9 +143,8 @@ public class RegionController {
                     locale
             );
             model.addAttribute("errorMessage", msg);
+            return "views/region/region-form"; // Nombre de la plantilla Thymeleaf para el formulario
         }
-        model.addAttribute("region", regionDTO);
-        return "views/region/region-form"; // Nombre de la plantilla Thymeleaf para el formulario
     }
 
     /**
@@ -174,8 +169,7 @@ public class RegionController {
         logger.info("Listando regiones... page={}, size={}, sort={}",
                 pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         try {
-            Page<RegionDTO> listRegionsDTOs =
-                    regionRepository.findAll(pageable).map(RegionMapper::toDTO);
+            Page<RegionDTO> listRegionsDTOs = regionService.list(pageable);
 
             logger.info("Se han cargado {} regiones en la página {}.",
                     listRegionsDTOs.getNumberOfElements(), listRegionsDTOs.getNumber());
@@ -230,36 +224,24 @@ public class RegionController {
             if (result.hasErrors()) {
                 return "views/region/region-form";
             }
-            // Validación de código duplicado
-            if (regionRepository.existsByCode(regionDTO.getCode())) {
-                logger.warn("El código de la región {} ya existe.", regionDTO.getCode());
-                String errorMessage = messageSource.getMessage("msg.region-controller.insert.codeExist",
-                        null,
-                        locale);
-                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-                return "redirect:/regions/new";
-            } else if (regionRepository.existsByName(regionDTO.getName())) {
-                logger.warn("El nombre de la región {} ya existe.", regionDTO.getName());
-                String errorMessage = messageSource.getMessage("msg.region-controller.insert.nameExist",
-                        null,
-                        locale
-                );
-                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-                return "redirect:/regions/new";
-            }
 
-            // Mappear DTO -> Entity y persistir
-            Region region = RegionMapper.toEntity(regionDTO);
-            regionRepository.save(region);
-            logger.info("Región {} insertada con éxito.", region.getCode());
+            regionService.create(regionDTO);
+            logger.info("Región {} insertada con éxito.", regionDTO.getCode());
+            return "redirect:/regions";
+
+        } catch (DuplicateResourceException ex) {
+            logger.warn("El código de la región {} ya existe.", regionDTO.getCode());
+            String errorMessage = messageSource.getMessage("msg.region-controller.insert.codeExist", null, locale);
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+            return "redirect:/regions/new";
         } catch (Exception e) {
             logger.error("Error al insertar la región {}: {}", regionDTO.getCode(), e.getMessage(), e);
             String errorMessage = messageSource.getMessage("msg.region-controller.insert.error",
                     null,
                     locale);
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+            return "redirect:/regions/new";
         }
-        return "redirect:/regions"; // Redirigir a la lista de regiones
     }
 
 
