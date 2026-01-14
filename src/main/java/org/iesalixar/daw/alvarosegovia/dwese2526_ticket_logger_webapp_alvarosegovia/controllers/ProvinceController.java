@@ -1,8 +1,8 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.controllers;
 
 import jakarta.validation.Valid;
-import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.daos.ProvinceDAO;
-import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.daos.RegionDAO;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.repositories.ProvinceRepository;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.repositories.RegionRepository;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.*;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Province;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Region;
@@ -12,14 +12,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Controlador que maneja las operaciones CRUD para la entidad 'Province'.
@@ -37,11 +43,11 @@ public class ProvinceController {
 
     // DAO para gestionar las operaciones de las provincias en la base de datos
     @Autowired
-    private ProvinceDAO provinceDAO;
+    private ProvinceRepository provinceRepository;
 
     // DAO para gestionar las operaciones de las regiones en la base de datos
     @Autowired
-    private RegionDAO regionDAO;
+    private RegionRepository regionRepository;
 
     /**
      * Muestra el formulario para crear una nueva provincia
@@ -53,7 +59,7 @@ public class ProvinceController {
     public String showNewForm(Model model, Locale locale) {
         logger.info("Mostrando formulario para nueva provincia.");
         try {
-            List<Region> listRegions = regionDAO.listAllRegions();
+            List<Region> listRegions = regionRepository.findAll();
             List<RegionDTO> listRegionsDTOs = RegionMapper.toDTOList(listRegions);
             model.addAttribute("province", new ProvinceCreateDTO());
             model.addAttribute("listRegions", listRegionsDTOs);
@@ -66,44 +72,72 @@ public class ProvinceController {
     }
 
     /**
-     * Muestra el formulario para editar una provincia existente.
+     * Muestra el formulario de edición de una provincia existente.
+     * <p>
+     * Recupera la provincia a partir de su identificador, la convierte a un
+     * {@link ProvinceUpdateDTO} y la envía a la vista junto con la lista de
+     * regiones disponibles para permitir su edición.
+     * <p>
+     * Si la provincia no existe o se produce un error durante la carga,
+     * se registra el incidente y se prepara un mensaje de error
+     * internacionalizado.
      *
-     * @param id    ID de la provincia a editar.
-     * @param model Modelo para pasar datos a la vista.
-     * @return plantilla Thymeleaf para el formulario.
+     * @param id     identificador de la provincia a editar, recibido como parámetro de la petición
+     * @param model  modelo utilizado para enviar los datos a la vista
+     * @param locale configuración regional utilizada para la internacionalización de mensajes
+     * @return nombre de la plantilla Thymeleaf que renderiza el formulario de edición de provincias
      */
     @GetMapping("/edit")
     public String showEditForm(@RequestParam("id") Long id, Model model, Locale locale) {
-        logger.info("Mostrando formulario de edición para la provincia con ID: {}", id);
+        logger.info("Mostrando formulario de edición para la provincia con ID {}", id);
+        Optional<Province> provinceOpt;
+        ProvinceUpdateDTO provinceDTO = null;
         try {
-            Province province = provinceDAO.getProvinceById(id);
-            ProvinceUpdateDTO provinceDTO = ProvinceMapper.toUpdateDTO(province);
-            if (province == null) {
+
+            // Spring Data: findById devuelve Optional
+            provinceOpt = provinceRepository.findById(id);
+
+            if (provinceOpt.isEmpty()) {
                 logger.warn("No se encontró la provincia con ID {}", id);
-                String errorMessage = messageSource.getMessage("msg.province-controller.edit.notFound", null, locale);
-                model.addAttribute("errorMessage", errorMessage);
+                String msg = messageSource.getMessage(
+                        "msg.province-controller.edit.notFound",
+                        new Object[]{id},
+                        locale
+                );
+                model.addAttribute("errorMessage", msg);
             } else {
-                List<Region> listRegions = regionDAO.listAllRegions();
-                List<RegionDTO> listRegionsDTOs = RegionMapper.toDTOList(listRegions);
-                model.addAttribute("province", provinceDTO);
-                model.addAttribute("listRegions", listRegionsDTOs);
+                Province province = provinceOpt.get();
+                provinceDTO = ProvinceMapper.toUpdateDTO(province);
+
+                List<Region> regions = regionRepository.findAll();
+                List<RegionDTO> regionsDTO = RegionMapper.toDTOList(regions);
+                model.addAttribute("listRegions", regionsDTO);
             }
+
         } catch (Exception e) {
-            logger.error("Error al obtener la provincia con ID {}: {}", id, e.getMessage());
-            String errorMessage = messageSource.getMessage("msg.province-controller.edit.error", null, locale);
-            model.addAttribute("errorMessage", errorMessage);
+            logger.error("Error al obtener la provincia con ID {}: {}", id, e.getMessage(), e);
+            String msg = messageSource.getMessage(
+                    "msg.province-controller.edit.error",
+                    null,
+                    locale
+            );
+            model.addAttribute("errorMessage", msg);
         }
+
+        model.addAttribute("province", provinceDTO);
         return "views/province/province-form";
     }
+
 
     /**
      * Muestra el detalle de una provincia específica, incluyendo su región asociada.
      *
-     * @param id                  Identificar de la provincia a consultar.
-     * @param model               Modelo de Spring MVC para pasar datos a la vista.
-     * @param redirectAttributes  Mensajes flash al redirigir (errores/avisos).
-     * @param locale              Configuración regional para internacionalización de mensajes.
-     * @return Plantilla Thymeleaf {@code views/province/province-detail} o redirección a {@code /provinces}.
+     * @param id                 Identificador único de la provincia a consultar.
+     * @param model              Modelo de Spring MVC utilizado para pasar datos a la vista.
+     * @param redirectAttributes Objeto para enviar mensajes flash de error o de información al redirigir.
+     * @param locale             Configuración regional actual del usuario (para internacionalización de mensajes).
+     * @return El nombre de la plantilla Thymeleaf que muestra el detalle de la provincia
+     *         ({@code views/province/province-detail}), o una redirección a {@code /provinces} en caso de error.
      */
     @GetMapping("/detail")
     public String showDetail(@RequestParam("id") Long id,
@@ -112,23 +146,36 @@ public class ProvinceController {
                              Locale locale) {
         logger.info("Mostrando detalle de la provincia con ID {}", id);
         try {
-            Province province = provinceDAO.getProvinceById(id);
-            ProvinceDetailDTO provinceDetailDTO = ProvinceMapper.toDetailDTO(province);
-            if (province == null) {
-                logger.warn("No se encontró la provincia con ID {}",id);
-                String msg = messageSource.getMessage("msg.province-controller.detail.notFound", null, locale);
+            // Cargar la provincia junto con su región asociada (fetch) para evitar LazyInitializationException
+            Optional<Province> provinceOpt = provinceRepository.findByIdWithRegion(id);
+
+            if (provinceOpt.isEmpty()) {
+                logger.warn("No se encontró la provincia con ID {}", id);
+                String msg = messageSource.getMessage(
+                        "msg.province-controller.detail.notFound",
+                        null,
+                        locale
+                );
                 redirectAttributes.addFlashAttribute("errorMessage", msg);
                 return "redirect:/provinces";
             }
-            model.addAttribute("province", provinceDetailDTO);
+            Province province = provinceOpt.get();
+            // Mappear Entity -> DTO de detalle (incluye región)
+            ProvinceDetailDTO provinceDTO = ProvinceMapper.toDetailDTO(province);
+            model.addAttribute("province", provinceDTO);
             return "views/province/province-detail";
         } catch (Exception e) {
             logger.error("Error al obtener el detalle de la provincia {}: {}", id, e.getMessage(), e);
-            String msg = messageSource.getMessage("msg.province-controller.detail.error", null, locale);
+            String msg = messageSource.getMessage(
+                    "msg.province-controller.detail.error",
+                    null,
+                    locale
+            );
             redirectAttributes.addFlashAttribute("errorMessage", msg);
             return "redirect:/provinces";
         }
     }
+
 
     /**
      * Lista todas las provincias y las pasa al modelo para la vista.
@@ -143,125 +190,125 @@ public class ProvinceController {
      */
     @GetMapping
     public String listProvinces(
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size,
-            @RequestParam(name = "sortField", defaultValue = "name") String sortField,
-            @RequestParam(name = "sortDir", defaultValue = "asc") String sortDir,
-            Model model,
-            Locale locale) {
-        logger.info("Listando regiones... page={}, size={},sortField={}, sortDir={}",
-                page, size, sortField, sortDir);
-        // Evitar valores negativos o tamaños raros
-        if (page < 0) page = 0;
-        if (size < 0) size = 10;
+            @PageableDefault(size = 10, sort = "name", direction = Sort.Direction.ASC) Pageable pageable,
+            Model model) {
+        logger.info("Listando provincias... page={}, size={},sort={}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         try {
-            long totalElements = provinceDAO.countProvinces();
-            int totalPages = (int) Math.ceil((double) totalElements / size);
-            // Ajustar si se pide una página fuera de rango
-            if (totalPages > 0 && page >= totalPages) {
-                page = totalPages - 1;
+            Page<ProvinceDTO> listProvincesDTOs =
+                    provinceRepository.findAll(pageable).map(ProvinceMapper::toDTO);
+
+            logger.info("Se han cargado {} provincias en la página {}.",
+                    listProvincesDTOs.getNumberOfElements(),listProvincesDTOs.getNumber());
+            model.addAttribute("page", listProvincesDTOs);
+
+            // Para mantener el sort actual en los enlaces de la vista (sort=campo,asc|desc)
+            String sortParam = "name,asc";
+            if (listProvincesDTOs.getSort().isSorted()) {
+                Sort.Order order = listProvincesDTOs.getSort().iterator().next();
+                sortParam = order.getProperty() + "," + order.getDirection().name().toLowerCase();
             }
-            List<Province> entities = provinceDAO.listProvincesPage(page, size, sortField, sortDir);
-            List<ProvinceDTO> listProvincesDTOs = ProvinceMapper.toDTOList(entities);
-            logger.info("Se han cargado {} provincias.", listProvincesDTOs.size(), page);
-            model.addAttribute("listProvinces", listProvincesDTOs);
-            model.addAttribute("currentPage", page);
-            model.addAttribute("pageSize", size);
-            model.addAttribute("totalPages", totalPages);
-            model.addAttribute("totalElements", totalElements);
-            // Para que la vista sepa cómo estamos ordenando ASC/DESC
-            model.addAttribute("sortField", sortField);
-            model.addAttribute("sortDir", sortDir);
-            model.addAttribute("reverseSortDir", "asc".equalsIgnoreCase(sortDir) ? "desc" : "asc");
+            model.addAttribute("sortParam", sortParam);
         } catch (Exception e) {
             logger.error("Error al listar las provincias: {}", e.getMessage());
-            String errorMessage = messageSource.getMessage("msg.province-controller.list.error", null, locale);
-            model.addAttribute("errorMessage", errorMessage);
+            model.addAttribute("errorMessage", "Error al listar las provincias.");
         }
-        return "views/province/province-list";
+
+        return "views/province/province-list"; // Nombre de la pantalla Thymeleaf a renderizar
     }
 
     /**
-     * Inserta una nueva región en la base de datos.
+     * Procesa la inserción de una nueva provincia.
+     * <p>
+     * Recibe los datos del formulario mediante un {@link ProvinceCreateDTO},
+     * valida la información introducida y comprueba que no existan conflictos
+     * de unicidad en el código o el nombre de la provincia.
+     * <p>
+     * En caso de error de validación o de negocio, se redirige al formulario
+     * mostrando un mensaje de error internacionalizado. Si la inserción es
+     * correcta, se persiste la provincia y se redirige al listado de provincias.
      *
-     * @param provinceDTO           Objeto que contiene los datos del formulario.
-     * @param result                Resultado de validación.
-     * @param redirectAttributes    Atributos para mensajes flash de redirección.
-     * @param locale                Configuración regional actual para mensajes.
-     * @return Redirección a la lista de provincias.
+     * @param provinceDTO        DTO que contiene los datos de la nueva provincia
+     *                           recibidos desde el formulario
+     * @param result             resultado de la validación del formulario
+     * @param redirectAttributes atributos utilizados para enviar mensajes
+     *                           flash entre redirecciones
+     * @param locale             configuración regional utilizada para la
+     *                           internacionalización de mensajes
+     * @return redirección al listado de provincias o al formulario en caso de error
      */
     @PostMapping("/insert")
     public String insertProvince(@Valid @ModelAttribute("province") ProvinceCreateDTO provinceDTO,
                                  BindingResult result,
-                                 Model model,
+                                 RedirectAttributes redirectAttributes,
                                  Locale locale) {
-
-        logger.info("Insertando nueva provincia con código {} y nombre {}", provinceDTO.getCode(), provinceDTO.getName());
+        logger.info("Insertando nueva provincia con código {}", provinceDTO.getCode());
 
         try {
-            // --- Validación de campos del formulario ---
+            // Validación de campos del formulario
             if (result.hasErrors()) {
-                // Volvemos a cargar las regiones para el select
-                List<Region> listRegions = regionDAO.listAllRegions();
-                model.addAttribute("listRegions", RegionMapper.toDTOList(listRegions));
                 return "views/province/province-form";
             }
-
-            // --- Validación de código duplicado ---
-            if (provinceDAO.existsProvinceByCode(provinceDTO.getCode())) {
+            // Validación de código duplicado
+            if (provinceRepository.existsByCode(provinceDTO.getCode())) {
                 logger.warn("El código de la provincia {} ya existe.", provinceDTO.getCode());
-                String errorMessage = messageSource.getMessage("msg.province-controller.insert.codeExist", null, locale);
-
-                // Recargar regiones para el select
-                List<Region> listRegions = regionDAO.listAllRegions();
-                model.addAttribute("listRegions", RegionMapper.toDTOList(listRegions));
-                model.addAttribute("errorMessage", errorMessage);
-
-                return "views/province/province-form";
-            }
-
-            // --- Validación de nombre duplicado ---
-            if (provinceDAO.existsProvinceByName(provinceDTO.getName())) {
+                String msg = messageSource.getMessage(
+                        "msg.province-controller.insert.codeExist",
+                        null,
+                        locale
+                );
+                redirectAttributes.addFlashAttribute("errorMessage", msg);
+                return "redirect:/provinces/new";
+            } else if (provinceRepository.existsByName(provinceDTO.getName())) {
                 logger.warn("El nombre de la provincia {} ya existe.", provinceDTO.getName());
-                String errorMessage = messageSource.getMessage("msg.province-controller.insert.nameExist", null, locale);
-
-                // Recargar regiones para el select
-                List<Region> listRegions = regionDAO.listAllRegions();
-                model.addAttribute("listRegions", RegionMapper.toDTOList(listRegions));
-                model.addAttribute("errorMessage", errorMessage);
-
-                return "views/province/province-form";
+                String msg = messageSource.getMessage(
+                        "msg.province-controller.insert.nameExist",
+                        null,
+                        locale
+                );
+                redirectAttributes.addFlashAttribute("errorMessage", msg);
+                return "redirect:/provinces/new";
             }
 
-            // --- Insertar provincia ---
+            // Mapear DTO -> Entity y persistir
             Province province = ProvinceMapper.toEntity(provinceDTO);
-            provinceDAO.insertProvince(province);
+            provinceRepository.save(province);
             logger.info("Provincia {} insertada con éxito.", province.getCode());
-
         } catch (Exception e) {
-            logger.error("Error al insertar la provincia {}: {}", provinceDTO.getCode(), e.getMessage());
-            String errorMessage = messageSource.getMessage("msg.province-controller.insert.error", null, locale);
-            model.addAttribute("errorMessage", errorMessage);
-
-            // Recargar regiones para el select
-            List<Region> listRegions = regionDAO.listAllRegions();
-            model.addAttribute("listRegions", RegionMapper.toDTOList(listRegions));
-
-            return "views/province/province-form";
+            logger.error("Error al insertar la provincia {}: {}", provinceDTO.getCode(), e.getMessage(), e);
+            String errorMessage = messageSource.getMessage(
+                    "msg.province-controller.insert.error",
+                    null,
+                    locale
+            );
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
         }
 
-        // Redirigir al listado si todo ha ido bien
         return "redirect:/provinces";
     }
 
 
     /**
-     * Actualiza una provincia existente en la base de datos.
-     * @param provinceDTO           Provincia con los datos actualizados.
-     * @param result             Resultado de la validación.
-     * @param redirectAttributes Atributos para mensajes flash.
-     * @param locale             Configuración regional actual.
-     * @return Redirección al listado de provincias.
+     * Procesa la actualización de una provincia existente.
+     * <p>
+     * Recibe los datos del formulario mediante un {@link ProvinceUpdateDTO},
+     * valida la información introducida y comprueba que no existan conflictos
+     * de unicidad en el código o el nombre de la provincia.
+     * <p>
+     * Si se producen errores de validación, de negocio o si la provincia no
+     * existe, se redirige al formulario o al listado mostrando los mensajes
+     * de error correspondientes. En caso de éxito, la provincia se actualiza
+     * y se redirige al listado de provincias.
+     *
+     * @param provinceDTO        DTO que contiene los datos actualizados de la provincia
+     * @param result             resultado de la validación del formulario
+     * @param redirectAttributes atributos utilizados para enviar mensajes flash
+     *                           entre redirecciones
+     * @param model              modelo utilizado para enviar datos a la vista
+     *                           en caso de error
+     * @param locale             configuración regional utilizada para la
+     *                           internacionalización de mensajes
+     * @return redirección al listado de provincias o al formulario en caso de error
      */
     @PostMapping("/update")
     public String updateProvince(@Valid @ModelAttribute("province") ProvinceUpdateDTO provinceDTO,
@@ -273,67 +320,46 @@ public class ProvinceController {
         logger.info("Actualizando provincia con ID {}", provinceDTO.getId());
 
         try {
-            // Si hay errores de validación, recargar regiones y mostrar formulario
+            // --- Validación de campos del formulario ---
             if (result.hasErrors()) {
-                List<Region> listRegions = regionDAO.listAllRegions();
-                List<RegionDTO> listRegionsDTOs = RegionMapper.toDTOList(listRegions);
-                model.addAttribute("listRegions", listRegionsDTOs);
                 return "views/province/province-form";
             }
 
-            // -------- VALIDACIÓN DE CODE DUPLICADO (MISMO MENSAJE QUE INSERT) --------
-            if (provinceDAO.existsProvinceByCodeAndNotId(provinceDTO.getCode(), provinceDTO.getId())) {
-
+            // --- Validación de código duplicado ---
+            if (provinceRepository.existsByCodeAndIdNot(provinceDTO.getCode(), provinceDTO.getId())) {
                 logger.warn("El código de la provincia {} ya existe para otra provincia.", provinceDTO.getCode());
-
-                String errorMessage = messageSource.getMessage(
-                        "msg.province-controller.insert.codeExist",   // <- MISMO QUE INSERT
-                        null,
-                        locale
-                );
-
-                // Volver al formulario manteniendo datos
-                List<Region> listRegions = regionDAO.listAllRegions();
-                List<RegionDTO> listRegionsDTOs = RegionMapper.toDTOList(listRegions);
-                model.addAttribute("listRegions", listRegionsDTOs);
-                model.addAttribute("errorMessage", errorMessage);
-
-                return "views/province/province-form";
+                String msg = messageSource.getMessage("msg.province-controller.insert.codeExist", null, locale);
+                redirectAttributes.addFlashAttribute("errorMessage", msg);
+                return "redirect:/provinces/edit?id=" + provinceDTO.getId();
             }
 
-            // -------- VALIDACIÓN DE NAME DUPLICADO --------
-            if (provinceDAO.existsProvinceByName(provinceDTO.getName())) {
-
+            // --- Validación de nombre duplicado ---
+            if (provinceRepository.existsByName(provinceDTO.getName())) {
                 logger.warn("El nombre de la provincia {} ya existe para otra provincia.", provinceDTO.getName());
-
-                String errorMessage = messageSource.getMessage(
-                        "msg.province-controller.insert.nameExist",   // <- también el mismo que insert
-                        null,
-                        locale
-                );
-
-                List<Region> listRegions = regionDAO.listAllRegions();
-                List<RegionDTO> listRegionsDTOs = RegionMapper.toDTOList(listRegions);
-                model.addAttribute("listRegions", listRegionsDTOs);
-                model.addAttribute("errorMessage", errorMessage);
-
-                return "views/province/province-form";
+                String msg = messageSource.getMessage("msg.province-controller.insert.nameExist", null, locale);
+                redirectAttributes.addFlashAttribute("errorMessage", msg);
+                return "redirect:/provinces/edit?id=" + provinceDTO.getId();
             }
 
-            // -------- ACTUALIZAR --------
-            Province province = ProvinceMapper.toEntity(provinceDTO);
-            provinceDAO.updateProvince(province);
+            // Cargar entidad existente (Spring Data -> Optional)
+            Optional<Province> provinceOpt = provinceRepository.findById(provinceDTO.getId());
+            if (provinceOpt.isEmpty()) {
+                logger.warn("No se encontró la provincia con ID {}", provinceDTO.getId());
+                String msg = messageSource.getMessage("msg.province-controller.detail.notFound", null, locale);
+                redirectAttributes.addFlashAttribute("errorMessage", msg);
+                return "redirect:/provinces";
+            }
+
+            Province province = provinceOpt.get();
+            ProvinceMapper.copyToExistingEntity(provinceDTO, province);
+            provinceRepository.save(province);
 
             logger.info("Provincia con ID {} actualizada con éxito.", province.getId());
 
         } catch (Exception e) {
-            logger.error("Error al actualizar la provincia con ID {}: {}", provinceDTO.getId(), e.getMessage());
-            String errorMessage = messageSource.getMessage(
-                    "msg.province-controller.update.error",
-                    null,
-                    locale
-            );
-            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+            logger.error("Error al actualizar la provincia con ID {}: {}", provinceDTO.getId(), e.getMessage(), e);
+            String msg = messageSource.getMessage("msg.province-controller.update.error", null, locale);
+            redirectAttributes.addFlashAttribute("errorMessage", msg);
         }
 
         return "redirect:/provinces";
@@ -362,10 +388,17 @@ public class ProvinceController {
                                  Locale locale) {
         logger.info("Eliminando provincia con ID {}", id);
         try {
-            provinceDAO.deleteProvince(id);
+            Optional<Province> provinceOpt = provinceRepository.findById(id);
+            if (provinceOpt.isEmpty()) {
+                logger.warn("No se encontró la provincia con ID: {}", id);
+                String notFound = messageSource.getMessage("msg.province-controller.detail.notFound", null, locale);
+                redirectAttributes.addFlashAttribute("errorMessage", notFound);
+                return "redirect:/provinces";
+            }
+            provinceRepository.deleteById(id);
             logger.info("Provincia con ID {} eliminada con éxito.", id);
         } catch (Exception e) {
-            logger.error("Error al eliminar la provincia con ID {}: {}", id, e.getMessage());
+            logger.error("Error al eliminar la provincia con ID {}: {}", id, e.getMessage(), e);
             String errorMessage = messageSource.getMessage("msg.province-controller.delete.error", null, locale);
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
         }
