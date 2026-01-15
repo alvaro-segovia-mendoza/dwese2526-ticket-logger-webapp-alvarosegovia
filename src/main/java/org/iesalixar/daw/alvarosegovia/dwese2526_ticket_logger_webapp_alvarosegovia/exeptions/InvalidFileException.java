@@ -1,6 +1,6 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.exeptions;
 
-public class InvalidFileExtension extends RuntimeException {
+public class InvalidFileException extends RuntimeException {
     /**
      * Recurso/funcionalidad afectada por el fichero (por ejemplo: "userProfile", "attachement", "ticket").
      * Mantener este dato ayuda a homogeneizar el manejo de errores entre dominios.
@@ -24,7 +24,7 @@ public class InvalidFileExtension extends RuntimeException {
      * @param field    nombre del campo del formulario (ej. {@code "profileImageFile"}).
      * @param value    valor/detalle asociado al error (ej. {@code "application/pdf"} o {@code 5242880}).
      */
-    public InvalidFileExtension(String resource, String field, Object value) {
+    public InvalidFileException(String resource, String field, Object value) {
         super("Invalid file for " + resource + " (" + field + "=" + value + ")");
         this.resource = resource;
         this.field = field;
@@ -39,7 +39,7 @@ public class InvalidFileExtension extends RuntimeException {
      * @param value    valor/detalle asociado al error (ej. {@code "application/pdf"} o {@code 5242880}).
      * @param detail   detalle adicional legible (ej. {@code "File too large"}).
      */
-    public InvalidFileExtension(String resource, String field, Object value, String detail) {
+    public InvalidFileException(String resource, String field, Object value, String detail) {
         super("Invalid file for " + resource + " (" + field + "=" + value + "): " + detail);
         this.resource = resource;
         this.field = field;

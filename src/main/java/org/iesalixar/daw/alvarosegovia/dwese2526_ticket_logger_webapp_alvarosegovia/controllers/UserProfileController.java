@@ -45,7 +45,7 @@ public class UserProfileController {
     public String showProfileForm(Model model, Locale locale) {
         logger.info("Mostrando formulario de perfil para el usuario fijo {}", FIXED_EMAIL);
 
-        Optional<User> optionalUser = Optional.ofNullable(userRepository.findByEmail(FIXED_EMAIL));
+        Optional<User> optionalUser = userRepository.findByEmail(FIXED_EMAIL);
         if (optionalUser.isEmpty()) {
             logger.warn("No se encontró el usuario con email {}", FIXED_EMAIL);
             String errorMessage = messageSource.getMessage("msg.user-controller.edit.notFound", null, locale);

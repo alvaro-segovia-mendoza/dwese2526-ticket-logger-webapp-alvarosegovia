@@ -29,7 +29,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @param email email del usuario
      * @return un {@link Optional} con el usuario si existe
      */
-    User findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
     /**
      * Recupera usuarios paginados.
