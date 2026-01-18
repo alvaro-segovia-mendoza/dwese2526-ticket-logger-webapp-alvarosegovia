@@ -4,10 +4,12 @@ import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosego
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.UserDTO;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.UserDetailDTO;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto.UserUpdateDTO;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.Role;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.User;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.exeptions.DuplicateResourceException;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.exeptions.ResourceNotFoundException;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.mappers.UserMapper;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.repositories.RoleRepository;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,12 +17,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Override
     public Page<UserDTO> list(Pageable pageable) {
@@ -54,7 +63,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void update(UserUpdateDTO dto) {
 
-        if (userRepository.existsByEmail(dto.getEmail())) {
+        if (userRepository.existsByEmailAndIdNot(dto.getEmail(), dto.getId())) {
             throw new DuplicateResourceException(
                     "user", "email", dto.getEmail()
             );
@@ -63,12 +72,22 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(dto.getId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "user", "id", dto.getId())
+                                "user", "id", dto.getId()
+                        )
                 );
 
-        UserMapper.copyToExistingEntity(dto, user, roles);
+        UserMapper.copyToExistingEntity(dto, user);
+
+        if (dto.getRoleIds() != null) {
+            Set<Role> roles = new HashSet<>(
+                    roleRepository.findByIdIn(dto.getRoleIds())
+            );
+            user.setRoles(roles);
+        }
+
         userRepository.save(user);
     }
+
 
     @Override
     public void delete(Long id) {
@@ -90,4 +109,10 @@ public class UserServiceImpl implements UserService {
 
         return UserMapper.toDetailDTO(user);
     }
+
+    @Override
+    public List<Role> listRoles() {
+        return roleRepository.findAll();
+    }
+
 }

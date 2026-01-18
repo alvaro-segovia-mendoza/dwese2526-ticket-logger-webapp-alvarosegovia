@@ -24,11 +24,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import javax.swing.text.html.Option;
-import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 /**
  * Controlador que maneja las operaciones CRUD para la entidad 'Region'.
@@ -276,6 +272,7 @@ public class RegionController {
         } catch (DuplicateResourceException ex) {
             logger.warn("El código de la región {} ya existe para otra región", regionDTO.getCode());
             String errorMessage = messageSource.getMessage("msg.region-controller.update.codeExist", null, locale);
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
             return "redirect:/regions/edit?id=" + regionDTO.getId();
         } catch (ResourceNotFoundException ex) {
             logger.warn("No se encontró la región con ID {}", regionDTO.getId());

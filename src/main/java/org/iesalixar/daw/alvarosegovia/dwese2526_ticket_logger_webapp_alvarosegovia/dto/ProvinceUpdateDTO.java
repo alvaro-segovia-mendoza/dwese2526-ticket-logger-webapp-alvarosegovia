@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ProvinceUpdateDTO {
 
-    @NotNull(message = "{msg.province.id.notEmpty}")  // Cambiado de @NotBlank a @NotNull
+    @NotNull(message = "{msg.province.id.notEmpty}")
     private Long id;
 
     @NotBlank(message = "{msg.province.code.notEmpty}")

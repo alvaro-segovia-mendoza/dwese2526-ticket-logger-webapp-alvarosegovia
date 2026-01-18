@@ -162,7 +162,7 @@ public class UserMapper {
     // --------------------------------------
     // Copiar DTO -> Entity existente
     // --------------------------------------
-    public static void copyToExistingEntity(UserUpdateDTO dto, User entity, Set<Role> roles) {
+    public static void copyToExistingEntity(UserUpdateDTO dto, User entity) {
         if (dto == null || entity == null) return;
 
         // Actualizamos los campos editables

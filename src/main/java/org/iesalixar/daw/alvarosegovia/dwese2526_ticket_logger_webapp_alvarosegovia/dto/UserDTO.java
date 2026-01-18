@@ -39,5 +39,6 @@ public class UserDTO {
 
     // Set de roles que se asignarán al usuario
     private Set<String> roles;
+
 }
 

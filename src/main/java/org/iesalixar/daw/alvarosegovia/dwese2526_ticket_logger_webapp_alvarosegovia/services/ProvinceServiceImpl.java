@@ -52,13 +52,14 @@ public class ProvinceServiceImpl implements ProvinceService {
      */
     @Override
     public ProvinceUpdateDTO getForEdit(Long id) {
-        Province province = provinceRepository.findById(id)
+        Province province = provinceRepository.findByIdWithRegion(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("province", "id", id)
                 );
 
         return ProvinceMapper.toUpdateDTO(province);
     }
+
 
     /**
      * Crea una nueva provincia.

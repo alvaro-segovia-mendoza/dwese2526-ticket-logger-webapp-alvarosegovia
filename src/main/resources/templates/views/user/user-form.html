@@ -51,13 +51,12 @@
 
             <!-- ───────────── ROLES (Multi-select obligatorio) ───────────── -->
             <div class="mb-3">
-                <label for="roles" class="form-label" th:text="#{msg.user-form.roles}">Roles</label>
-                <select id="roles" class="form-select" multiple th:field="*{roleIds}">
-                    <option th:each="role : ${allRoles}"
-                            th:value="${role.id}"
-                            th:text="${role.displayName} + ' (' + ${role.Name} + ')'">
-                    </option>
+                <label for="roles" th:text="#{msg.user-form.roles}"></label>
+                <select id="roles" th:field="*{roleIds}" multiple class="form-select">
+                    <option th:each="role : ${listRoles}" th:value="${role.id}" th:text="${role.name}"></option>
                 </select>
+                <div class="text-danger" th:if="${#fields.hasErrors('roleIds')}" th:errors="*{roleIds}"></div>
+
                 <div th:if="${#fields.hasErrors('roleIds')}" class="text-danger mt-1">
                     <p th:errors="*{roleIds}">Debe seleccionar al menos un rol.</p>
                 </div>

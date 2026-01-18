@@ -18,9 +18,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ProvinceCreateDTO {
 
-    // En este DTO este campo siempre vendrá null porque es una inserción
-    private Long id;
-
     @NotBlank(message = "{msg.province.code.notEmpty}")
     @Size(max = 10, message = "{msg.province.code.size}")
     private String code;

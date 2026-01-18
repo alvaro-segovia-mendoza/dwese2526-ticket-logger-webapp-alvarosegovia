@@ -62,7 +62,7 @@ public class UserProfileController {
 
         try {
             UserProfileFormDTO formDTO = userProfileService.getFormByEmail(FIXED_EMAIL);
-            model.addAttribute("userProfile", formDTO);
+            model.addAttribute("userProfileForm", formDTO);
             return "views/user-profile/user-profile-form";
 
         } catch (ResourceNotFoundException ex) {
