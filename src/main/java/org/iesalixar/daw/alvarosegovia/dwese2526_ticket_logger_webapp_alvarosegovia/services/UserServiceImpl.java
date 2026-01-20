@@ -57,8 +57,15 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = UserMapper.toEntity(dto);
+
+        if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
+            Set<Role> roles = new HashSet<>(roleRepository.findByIdIn(dto.getRoleIds()));
+            user.setRoles(roles);
+        }
+
         userRepository.save(user);
     }
+
 
     @Override
     public void update(UserUpdateDTO dto) {

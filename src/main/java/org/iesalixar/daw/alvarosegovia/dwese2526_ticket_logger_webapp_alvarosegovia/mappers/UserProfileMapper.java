@@ -76,8 +76,6 @@ public class UserProfileMapper {
         UserProfile profile = new UserProfile();
         // Relación 1:1 con shared primary key
         profile.setUser(user);
-        // Opcional: se puede establecer el id explícitamente
-        profile.setId(user.getId());
 
         profile.setFirstName(dto.getFirstName());
         profile.setLastName(dto.getLastName());
