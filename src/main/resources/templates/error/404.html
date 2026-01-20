@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(#{msg.title} + ' - 404')}"></head>
+
+
+<body class="d-flex flex-column h-100">
+<header th:replace="fragments/header :: header"></header>
+
+
+<main class="list-page">
+    <div class="list-card">
+
+
+        <h1 class="mb-2">404</h1>
+        <p class="text-muted mb-4">No se ha encontrado la página que buscas.</p>
+
+
+        <a class="btn btn-primary" th:href="@{/}">Volver al inicio</a>
+    </div>
+</main>
+
+
+<footer th:replace="fragments/footer :: footer"></footer>
+<div th:replace="fragments/scripts :: scripts"></div>
+</body>
+</html>

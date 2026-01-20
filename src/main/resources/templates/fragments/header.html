@@ -1,4 +1,5 @@
-<header th:fragment="header" class="border-bottom bg-light" xmlns:th="http://www.thymeleaf.org">
+<header th:fragment="header" class="border-bottom bg-light" xmlns:th="http://www.thymeleaf.org"
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
 
@@ -24,6 +25,14 @@
                 </li>
             </ul>
 
+            <!-- Texto bienvenida (solo autenticado) -->
+            <div class="d-none d-lg-flex align-items-center me-3"
+                 sec:authorize="isAuthenticated()">
+                <span class="small text-secondary fw-medium me-1">Bienvenido,</span>
+                <span class="small fw-semibold text-primary text-truncate" style="max-width:220px"
+                      sec:authentication="name"></span>
+            </div>
+
             <!-- Avatar y menú usuario -->
             <div class="dropdown text-end me-3">
                 <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle"
@@ -41,7 +50,11 @@
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                        <a class="dropdown-item text-danger" th:href="@{/logout}" th:text="#{menu.logout}">Cerrar sesión</a>
+                        <form th:action="@{/logout}" method="post" class="m-0">
+                            <button type="submit" class="dropdown-item text-danger">
+                                Cerrar sesión
+                            </button>
+                        </form>
                     </li>
                 </ul>
 
@@ -55,6 +68,13 @@
                     <option value="en" th:selected="${#locale.language == 'en'}">English</option>
                 </select>
             </form>
+
+            <!-- Botón de Login (solo si NO autenticado) -->
+            <div sec:authorize="!isAuthenticated()">
+                <a class="btn btn-outline-primary btn-sm" th:href="@{/login}">
+                    Login
+                </a>
+            </div>
 
         </div>
     </nav>
