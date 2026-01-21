@@ -1,5 +1,7 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.config;
 
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.handlers.CustomOAuth2FailureHandler;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.handlers.CustomOAuth2SuccessHandler;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.services.CustomUserDetailsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,12 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+
+    @Autowired
+    private CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
+
+    @Autowired
+    private CustomOAuth2FailureHandler customOAuth2FailureHandler;
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
@@ -63,6 +71,13 @@ public class SecurityConfig {
                             .loginPage("/login")
                             .defaultSuccessUrl("/") // Redirige al inicio después del login
                             .permitAll();           // Permite el login a todos los usuarios
+                })
+                .oauth2Login(oauth2 -> {
+                    logger.debug("Configurando login con OAuth2");
+                    oauth2
+                            .loginPage("/login")        // Reutiliza la página de inicio de sesión personalizada
+                            .successHandler(customOAuth2SuccessHandler) // Usa el Success Handler personalizado
+                            .failureHandler(customOAuth2FailureHandler); // Handler para fallo en autenticación
                 })
                 .sessionManagement(session -> {
                     logger.debug("Configurando política de gestión de sesiones");

@@ -16,6 +16,9 @@
         <!-- Título -->
         <h1 th:text="#{spring.security.ui.login.title}"></h1>
 
+        <div th:if="${errorMessage}" class="alert alert-danger">
+            <p th:text="${errorMessage}"></p>
+        </div>
 
         <!-- Mensaje de error (login fallido) -->
         <div th:if="${param.error}" class="alert alert-danger"
@@ -62,6 +65,14 @@
                     th:text="#{spring.security.ui.login.submit}">
             </button>
 
+            <div class="row justify-content-center mt-3">
+                <div>
+                    <!-- Botón de inicio de sesión con GitHub -->
+                    <a href="/oauth2/authorization/github" class="btn btn-dark btn-lg w-100">
+                        <i class="bi bi-github"></i> Iniciar sesión con GitHub
+                    </a>
+                </div>
+            </div>
 
             <!-- Acciones secundarias (opcionales) -->
             <div class="d-flex justify-content-between mt-3">
