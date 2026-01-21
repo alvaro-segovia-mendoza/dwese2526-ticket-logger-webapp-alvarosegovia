@@ -3,6 +3,7 @@ package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvaroseg
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.entities.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,6 +31,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @param email email del usuario
      * @return un {@link Optional} con el usuario si existe
      */
+    @EntityGraph(attributePaths = "roles")
     Optional<User> findByEmail(String email);
 
     /**

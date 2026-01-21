@@ -19,40 +19,41 @@ import java.util.Set;
 @Table(name = "roles")
 public class Role {
 
-    /** Identificador único del rol */
+
+    /** BIGINT AUTO_INCREMENT PRIMARY KEY */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Nombre técnico del rol (ej. ADMIN, USER) */
+
+    /** VARCHAR(50) NOT NULL UNIQUE - Nombre técnico: ROLE_ADMIN, ROLE_USER... */
     @Column(name = "name", nullable = false, unique = true, length = 50)
     private String name;
 
-    /** Nombre visible del rol para interfaces y reportes */
+
+    /** VARCHAR(100) NOT NULL - Nombre legible para la interfaz */
     @Column(name = "display_name", nullable = false, length = 100)
     private String displayName;
 
-    /** Descripción breve del rol y sus responsabilidades */
+
+    /** VARCHAR(255) NULL - Descripción opcional del rol */
     @Column(name = "description", length = 255)
     private String description;
 
+
     /**
-     * Conjunto de usuarios asociados a este rol.
-     * Relación Many-to-Many inversa, cargada de forma perezosa.
+     * Relación N:M con User.
+     * Lado NO propietario (mappedBy = "roles").
      */
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     private Set<User> users = new HashSet<>();
 
-    /**
-     * Constructor simplificado para crear un rol sin ID.
-     *
-     * @param name Nombre técnico del rol (ej. ADMIN)
-     * @param displayName Nombre visible del rol
-     * @param description Descripción del rol
-     */
+
+    /** Constructor útil para crear roles sin id ni usuarios. */
     public Role(String name, String displayName, String description) {
         this.name = name;
         this.displayName = displayName;
         this.description = description;
     }
 }
+

@@ -1,13 +1,11 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -22,33 +20,51 @@ import java.util.Set;
 @Builder
 public class UserUpdateDTO {
 
-    @NotNull(message="{msg.user.id.notNull}")
+
+    @NotNull(message = "{msg.user.id.notnull}")
     private Long id;
 
-    @NotBlank(message = "{msg.user.email.notEmpty}")
-    @Size(min = 3, max = 50, message = "{msg.user.email.size}")
+
+    @Email(message = "{msg.user.email.invalid}")
+    @NotBlank(message = "{msg.user.username.notblank}")
+    @Size(min = 4, max = 100, message = "{msg.user.username.size}")
     private String email;
 
-    @NotEmpty(message="{msg.user.passwordHash.notEmpty}")
-    @Size(min=6,max=100,message="{msg.user.passwordHash.size}")
-    private String passwordHash;
 
-    @NotNull(message = "{msg.user.active.notNull}")
-    private Boolean active;
+    @NotNull(message = "{msg.user.active.notnull}")
+    private boolean active;
 
-    @NotNull(message = "{msg.user.accountNonLocked.notNull}")
-    private Boolean accountNonLocked;
 
-    @NotNull(message = "{msg.user.emailVerified.notNull}")
-    private Boolean emailVerified;
+    @NotNull(message = "{msg.user.accountNonLocked.notnull}")
+    private boolean accountNonLocked;
 
-    @NotNull(message = "{msg.user.mustChangePassword.notNull}")
-    private Boolean mustChangePassword;
 
-    private LocalDateTime lastPasswordChange; // Si se cambia la contraseña se actualiza
-    private LocalDateTime passwordExpiresAt;  // Se recalcula automáticamente
-    private Integer failedLoginAttempts;      // Se puede actualizar si es necesario
+    @PastOrPresent(message = "{msg.user.lastPasswordChange.pastorpresent}")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime lastPasswordChange;
 
+
+    @FutureOrPresent(message = "{msg.user.passwordExpiresAt.futureorpresent}")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime passwordExpiresAt;
+
+
+    @Min(value = 0, message = "{msg.user.failedLoginAttempts.min}")
+    private Integer failedLoginAttempts;
+
+
+    @NotNull(message = "{msg.user.emailVerified.notnull}")
+    private boolean emailVerified;
+
+
+    @NotNull(message = "{msg.user.mustChangePassword.notnull}")
+    private boolean mustChangePassword;
+
+
+    // ─────────────────────────────────────
+    // Roles seleccionados (ids de Role) - OBLIGATORIOS
+    // ─────────────────────────────────────
     @NotEmpty(message = "{msg.user.roles.notempty}")
     private Set<Long> roleIds = new HashSet<>();
 }
+

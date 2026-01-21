@@ -7,5 +7,5 @@ public interface UserProfileService {
 
     UserProfileFormDTO getFormByEmail(String email);
 
-    void updateProfile(UserProfileFormDTO profileDTO, MultipartFile profileImageFile);
+    void updateProfile(String email, UserProfileFormDTO profileDTO, MultipartFile profileImageFile);
 }

@@ -17,38 +17,60 @@ import java.util.Set;
 @AllArgsConstructor
 public class UserDetailDTO {
 
+
     private Long id;
+
 
     private String email;
 
-    private String passwordHash;
-    // Indicadores de estado de la cuenta
-    private Boolean active;
-    private Boolean accountNonLocked;
-    private Boolean emailVerified;
-    private Boolean mustChangePassword;
 
-    // Fechas de control de la contraseña
+    private boolean active;
+
+
+    private boolean accountNonLocked;
+
+
     private LocalDateTime lastPasswordChange;
+
+
     private LocalDateTime passwordExpiresAt;
 
-    // Número de intentos fallidos de inicio de sesión
+
     private Integer failedLoginAttempts;
 
-    /** Email solo lectura, informativo en la vista */
+
+    private boolean emailVerified;
+
+
+    private boolean mustChangePassword;
+
+
+    // ────────────────────────────────────────────
+    // Campos del perfil del usuario (UserProfile)
+    // ────────────────────────────────────────────
+
 
     private String firstName;
 
+
     private String lastName;
+
 
     private String phoneNumber;
 
+
     private String profileImage;
+
 
     private String bio;
 
+
     private String locale;
 
-    private Set<String> roles;
 
+    // ────────────────────────────────────────────
+    // Roles del usuario (nombres de rol)
+    // ────────────────────────────────────────────
+    private Set<String> roles;
 }
+

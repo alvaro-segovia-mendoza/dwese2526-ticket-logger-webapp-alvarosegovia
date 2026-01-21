@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.security.Principal;
 import java.util.Locale;
 
 /**
@@ -55,13 +56,13 @@ public class UserProfileController {
      * @return vista del formulario de perfil
      */
     @GetMapping("/edit")
-    public String showProfileForm(Model model, Locale locale) {
+    public String showProfileForm(Model model, Locale locale, Principal principal) {
 
-        String FIXED_EMAIL = "admin@app.local";
-        logger.info("Mostrando formulario de perfil para el usuario fijo {}", FIXED_EMAIL);
+        String email = principal.getName();
+        logger.info("Mostrando formulario de perfil para el usuario fijo {}", email);
 
         try {
-            UserProfileFormDTO formDTO = userProfileService.getFormByEmail(FIXED_EMAIL);
+            UserProfileFormDTO formDTO = userProfileService.getFormByEmail(email);
             model.addAttribute("userProfileForm", formDTO);
             return "views/user-profile/user-profile-form";
 
@@ -101,18 +102,19 @@ public class UserProfileController {
             BindingResult result,
             @RequestParam(value = "profileImageFile", required = false) MultipartFile profileImageFile,
             RedirectAttributes redirectAttributes,
-            Locale locale) {
+            Locale locale,
+            Principal principal) {
 
-        logger.info("Actualizando perfil para userId: {}", profileDto.getUserId());
+        String email = principal.getName();
+        logger.info("Actualizando perfil para email={}", email);
 
         if (result.hasErrors()) {
-            logger.warn("Errores de validación en el formulario de perfil para userId={}",
-                    profileDto.getUserId());
+            logger.warn("Errores de validación en el formulario de perfil para email={}", email);
             return "views/user-profile/user-profile-form";
         }
 
         try {
-            userProfileService.updateProfile(profileDto, profileImageFile);
+            userProfileService.updateProfile(email, profileDto, profileImageFile);
             String successMessage = messageSource.getMessage(
                     "msg.user-profile.success", null, locale);
             redirectAttributes.addFlashAttribute("successMessage", successMessage);

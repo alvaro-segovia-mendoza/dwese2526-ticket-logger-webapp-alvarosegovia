@@ -1,9 +1,13 @@
 package org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.config;
 
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.services.CustomUserDetailsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -21,10 +25,13 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)  // Activa la seguridad basada en métodos
 public class SecurityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
     /**
      * Configura el filtro de seguridad para las solicitudes HTTP, especificando las
      * rutas permitidas y los roles necesarios para acceder a diferentes endpoints.
@@ -47,7 +54,7 @@ public class SecurityConfig {
                             // REGIONS: ADMIN o MANAGER (para algunas pruebas de permisos)
                             .requestMatchers("/regions**").hasAnyRole("ADMIN", "MANAGER")
                             .requestMatchers("/provinces**").hasRole("MANAGER")   // Solo MANAGER
-                            .requestMatchers("/profile**").hasRole("USER")                    // Solo USER
+                            .requestMatchers("/profile**").hasRole("USER")        // Solo USER
                             .anyRequest().authenticated();           // Cualquier otra solicitud requiere autenticación
                 })
                 .formLogin(form -> {
@@ -63,65 +70,30 @@ public class SecurityConfig {
                     session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
                 });
 
-
-
-
         logger.info("Saliendo del método securityFilterChain");
         return http.build();
     }
 
 
-
-
     /**
-     * Configura los detalles de usuario en memoria para pruebas y desarrollo, asignando
-     * roles específicos a cada usuario.
+     * Provider de autenticación basado en DAO.
      *
-     * @return una instancia de {@link UserDetailsService} que proporciona autenticación en memoria.
+     * <p>Usa el {@link CustomUserDetailsService} para localizar usuarios en BD y el
+     * {@link PasswordEncoder} para verificar la contraseña (BCrypt). </p>
+     *
+     * @return {@link DaoAuthenticationProvider} configurado.
      */
     @Bean
-    public UserDetailsService userDetailsService() {
-        logger.info("Entrando en el método userDetailsService");
+    public DaoAuthenticationProvider authenticationProvider() {
+        logger.info("Entrando en el método authenticatioinProvider");
 
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(customUserDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
 
-
-
-        logger.debug("Creando usuario con rol USER");
-        UserDetails user = User.builder()
-                .username("user")
-                .password(passwordEncoder().encode("password"))
-                .roles("USER")
-                .build();
-
-
-
-
-        logger.debug("Creando usuario con rol ADMIN");
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password(passwordEncoder().encode("password"))
-                .roles("ADMIN")
-                .build();
-
-
-
-
-        logger.debug("Creando usuario con rol MANAGER");
-        UserDetails manager = User.builder()
-                .username("manager")
-                .password(passwordEncoder().encode("password"))
-                .roles("MANAGER")
-                .build();
-
-
-
-
-        logger.info("Saliendo del método userDetailsService");
-        return new InMemoryUserDetailsManager(user, admin, manager);
+        logger.info("Saliendo del método authenticationProvider");
+        return provider;
     }
-
-
-
 
     /**
      * Configura el codificador de contraseñas para cifrar las contraseñas de los usuarios

@@ -60,6 +60,13 @@
 
             </div>
 
+            <!-- Botón de Login (solo si NO autenticado) -->
+            <div sec:authorize="!isAuthenticated()">
+                <a class="btn btn-outline-primary btn-sm" th:href="@{/login}">
+                    Login
+                </a>
+            </div>
+
             <!-- Selector de idioma -->
             <form method="get" class="d-flex align-items-center" th:action="@{/}">
                 <label for="langSelect" class="visually-hidden">Idioma</label>
@@ -68,13 +75,6 @@
                     <option value="en" th:selected="${#locale.language == 'en'}">English</option>
                 </select>
             </form>
-
-            <!-- Botón de Login (solo si NO autenticado) -->
-            <div sec:authorize="!isAuthenticated()">
-                <a class="btn btn-outline-primary btn-sm" th:href="@{/login}">
-                    Login
-                </a>
-            </div>
 
         </div>
     </nav>
