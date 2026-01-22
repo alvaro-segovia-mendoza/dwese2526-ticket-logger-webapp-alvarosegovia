@@ -85,7 +85,7 @@ INSERT IGNORE INTO provinces (code, name, region_id) VALUES
 ('51', 'Ceuta', 18),
 ('52', 'Melilla', 18);
 
-       -- Insertar los roles
+-- Insertar los roles
 INSERT IGNORE INTO roles (id, name, display_name, description) VALUES
 (1, 'ROLE_ADMIN', 'Administrator', 'Acceso total a todas las funcionalidades del sistema'),
 (2, 'ROLE_USER', 'User', 'Usuario estándar'),
