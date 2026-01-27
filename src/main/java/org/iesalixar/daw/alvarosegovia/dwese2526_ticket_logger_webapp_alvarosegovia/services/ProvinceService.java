@@ -4,6 +4,8 @@ import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosego
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface ProvinceService {
 
     Page<ProvinceDTO> list(Pageable pageable);

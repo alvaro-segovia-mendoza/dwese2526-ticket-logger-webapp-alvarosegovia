@@ -113,7 +113,7 @@ public class ProvinceController {
      */
     @GetMapping
     public String listProvinces(@PageableDefault(size = 10, sort = "name", direction = Sort.Direction.ASC) Pageable pageable,
-                                Model model) {
+                                Model model, Locale locale) {
         try {
             Page<ProvinceDTO> provinces = provinceService.list(pageable);
             model.addAttribute("page", provinces);
@@ -138,7 +138,7 @@ public class ProvinceController {
     public String insertProvince(@Valid @ModelAttribute("province") ProvinceCreateDTO provinceDTO,
                                  BindingResult result,
                                  RedirectAttributes redirectAttributes,
-                                 Locale locale) {
+                                 Model model, Locale locale) {
         logger.info("Insertando nueva provincia con código {}", provinceDTO.getCode());
 
         if (result.hasErrors()) {
