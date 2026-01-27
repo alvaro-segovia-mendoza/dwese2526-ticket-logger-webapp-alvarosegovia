@@ -24,8 +24,6 @@ public class LoginController {
         String errorMessage = (String) request.getSession().getAttribute("errorMessage");
 
 
-
-
         // Si existe un mensaje de error, añadirlo al modelo y limpiar la sesión
         if (errorMessage != null) {
             model.addAttribute("errorMessage", errorMessage);
@@ -33,6 +31,7 @@ public class LoginController {
         }
         return "views/login/login"; // Redirige a una plantilla personalizada de login
     }
+
 
 }
 
