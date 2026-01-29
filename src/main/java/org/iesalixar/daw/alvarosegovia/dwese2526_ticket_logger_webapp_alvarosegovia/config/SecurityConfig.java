@@ -59,7 +59,7 @@ public class SecurityConfig {
                     auth
                             .requestMatchers(
                                     "/", "/js/**", "/css/**", "/images/**",
-                                    "/login", "/register","/auth**",
+                                    "/login", "/register","/auth/**",
                                     "/error", "/error/**").permitAll()        // Acceso anónimo
                             .requestMatchers("/users**").hasRole("ADMIN")         // Solo ADMIN
                             // REGIONS: ADMIN o MANAGER (para algunas pruebas de permisos)

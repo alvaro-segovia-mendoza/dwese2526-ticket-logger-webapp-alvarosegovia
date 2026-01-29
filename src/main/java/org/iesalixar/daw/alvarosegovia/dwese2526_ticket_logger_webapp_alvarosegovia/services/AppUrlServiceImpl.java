@@ -63,7 +63,6 @@ public class AppUrlServiceImpl implements AppUrlService {
                 .fromUriString(trimTrailingSlash(publicBaseUrl))
                 .path(ensureLeadingSlash(path));
 
-
         if (queryParams != null) {
             queryParams.forEach(b::queryParam);
         }

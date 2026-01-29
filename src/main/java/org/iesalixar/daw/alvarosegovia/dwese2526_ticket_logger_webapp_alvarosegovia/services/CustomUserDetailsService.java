@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * <p>Esta versión es la mínima para que el login funcione:
  * <ul>
  *   <li>Obtiene el usuario por email</li>
- *   <li>Devuelve un {@link org.springframework.security.core.userdetails.User} con sus roles</li>
+ *   <li>Devuelve un {@link User} con sus roles</li>
  *   <li>Aplica únicamente el flag de cuenta activa ({@code active}) como "disabled"</li>
  * </ul>
  * </p>
