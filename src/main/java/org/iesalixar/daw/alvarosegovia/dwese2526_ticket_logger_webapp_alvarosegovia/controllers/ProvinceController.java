@@ -181,11 +181,6 @@ public class ProvinceController {
      * Lista todas las provincias y las pasa al modelo para la vista.
      *
      * @param model  Modelo para pasar datos a la vista.
-     * @param page  número de página (0-based)
-     * @param size  tamaño de la página (nº de elementos por página)
-     * @param sortField campo por el que se ordenan los resultados (id, code, name).
-     * @param sortDir dirección de ordenación ("asc" o "desc").
-     * @param locale configuración regional (i18n)
      * @return plantilla Thymeleaf par el listado de provincias.
      */
     @GetMapping
@@ -304,8 +299,6 @@ public class ProvinceController {
      * @param result             resultado de la validación del formulario
      * @param redirectAttributes atributos utilizados para enviar mensajes flash
      *                           entre redirecciones
-     * @param model              modelo utilizado para enviar datos a la vista
-     *                           en caso de error
      * @param locale             configuración regional utilizada para la
      *                           internacionalización de mensajes
      * @return redirección al listado de provincias o al formulario en caso de error
@@ -314,7 +307,6 @@ public class ProvinceController {
     public String updateProvince(@Valid @ModelAttribute("province") ProvinceUpdateDTO provinceDTO,
                                  BindingResult result,
                                  RedirectAttributes redirectAttributes,
-                                 Model model,
                                  Locale locale) {
 
         logger.info("Actualizando provincia con ID {}", provinceDTO.getId());
