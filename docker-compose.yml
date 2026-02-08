@@ -52,32 +52,17 @@ services:
     # Esto asegura que los archivos no se pierdan al recrear contenedores
 
   phpmyadmin:
-  # Imagen oficial de phpMyAdmin (interfaz web para administrar MySQL/MariaDB) image: phpmyadmin:latest
-    # Nombre fijo del contenedor (útil para logs y comandos docker)
-   container_name: ticket-logger-phpmyadmin
-  # Asegura que el contenedor de la BD se arranque antes que phpMyAdmin
-   depends_on:
-    - db
-   environment:
-    # Host de la base de datos a la que se conectará phpMyAdmin.
-    # "db" es el nombre del servicio MariaDB en este mismo docker-compose,
-    # y Docker lo resuelve por DNS dentro de la red interna del compose.
-    PMA_HOST: db
-    # Puerto interno del servicio MariaDB dentro de la red Docker (por defecto 3306)
-    PMA_PORT: 3306
-    # Si está a ☺, phpMyAdmin NO te deja escribir cualquier host manualmente:
-    # solo te conectas al host indicado en PMA_HOST (más seguro en aula).
-    # Si lo pones a 1, podrías poner otro servidor MySQL/MariaDB en el login.
-    PMA_ARBITRARY: 0
-    # Límite máximo para subir ficheros desde la interfaz web (importar .sql, etc.) # Útil cuando importas dumps grandes.
-    UPLOAD_LIMIT: 128M
-   ports:
-  # Mapea el puerto 8081 del HOST (tu VM) al puerto 80 del contenedor.
-  # Acceso: http://IP_DE_LA_VM:8081
-  # Consejo seguridad (alternativas):
-  # - "127.0.0.1:8081:80" ->solo accesible desde la propia VM
-  # "192.168.2.41:8081:80" -> solo accesible desde esa IP de la VM
-    - "8081:80"
+    image: phpmyadmin:latest
+    container_name: ticket-logger-phpmyadmin
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 0
+      UPLOAD_LIMIT: 128M
+    ports:
+      - "8081:80"
 
 volumes:
   db_data:
