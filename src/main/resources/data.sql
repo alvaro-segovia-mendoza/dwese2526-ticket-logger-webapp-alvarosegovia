@@ -25,12 +25,12 @@ INSERT IGNORE INTO users (
    last_password_change, password_expires_at, failed_login_attempts,
    email_verified, must_change_password
 ) VALUES
-(1, 'admin@app.local',        'admin123',  TRUE,  TRUE,  NOW(), DATE_ADD(NOW(), INTERVAL 3 MONTH), 0, TRUE,  FALSE),
-(2, 'jdoe@app.local',         '1234',      TRUE,  TRUE,  NOW(), DATE_ADD(NOW(), INTERVAL 3 MONTH), 1, FALSE, FALSE),
-(3, 'maria@app.local',        'changeme',  TRUE,  TRUE,  NOW(), DATE_ADD(NOW(), INTERVAL 3 MONTH), 0, TRUE,  TRUE ),
-(4, 'blockeduser@app.local',  'secret',    FALSE, FALSE, NOW(), DATE_ADD(NOW(), INTERVAL 3 MONTH), 5, FALSE, FALSE);
-
+(1, 'admin@app.local',        '$2a$12$HnF3pSI.kpCNujmMgcQDA.fbGt2TFPbmMDH.rT4wUKLvOKEzsvlTC',  TRUE,  TRUE,  NOW(), DATE_ADD(NOW(), INTERVAL 3 MONTH), 0, TRUE,  FALSE),
+(2, 'jdoe@app.local',         '$2a$12$HnF3pSI.kpCNujmMgcQDA.fbGt2TFPbmMDH.rT4wUKLvOKEzsvlTC',      TRUE,  TRUE,  NOW(), DATE_ADD(NOW(), INTERVAL 3 MONTH), 1, FALSE, FALSE),
+(3, 'maria@app.local',        '$2a$12$HnF3pSI.kpCNujmMgcQDA.fbGt2TFPbmMDH.rT4wUKLvOKEzsvlTC',  TRUE,  TRUE,  NOW(), DATE_ADD(NOW(), INTERVAL 3 MONTH), 0, TRUE,  TRUE ),
+(4, 'blockeduser@app.local',  '$2a$12$HnF3pSI.kpCNujmMgcQDA.fbGt2TFPbmMDH.rT4wUKLvOKEzsvlTC',    FALSE, FALSE, NOW(), DATE_ADD(NOW(), INTERVAL 3 MONTH), 5, FALSE, FALSE);
 -- Insertar datos de las provincias españolas con los códigos correctos
+
 INSERT IGNORE INTO provinces (code, name, region_id) VALUES
 ('01', 'Araba/Álava', 16),
 ('02', 'Albacete', 8),
@@ -85,7 +85,7 @@ INSERT IGNORE INTO provinces (code, name, region_id) VALUES
 ('51', 'Ceuta', 18),
 ('52', 'Melilla', 18);
 
-       -- Insertar los roles
+-- Insertar los roles
 INSERT IGNORE INTO roles (id, name, display_name, description) VALUES
 (1, 'ROLE_ADMIN', 'Administrator', 'Acceso total a todas las funcionalidades del sistema'),
 (2, 'ROLE_USER', 'User', 'Usuario estándar'),

@@ -21,7 +21,7 @@
         <form th:object="${province}" method="post" class="mt-3"
               th:attr="action=${province.id} == null ? @{/provinces/insert} : @{/provinces/update}">
 
-        <input  type="hidden" th:field="*{id}" />
+            <input  type="hidden" th:field="*{id}" />
 
             <!-- Código -->
 

@@ -19,25 +19,35 @@ import java.util.Set;
 @Builder
 public class UserDTO {
 
+
     private Long id;
+
 
     private String email;
 
-    private String passwordHash;
-    // Indicadores de estado de la cuenta
-    private Boolean active;
-    private Boolean accountNonLocked;
-    private Boolean emailVerified;
-    private Boolean mustChangePassword;
 
-    // Fechas de control de la contraseña
+    private boolean active;
+
+
+    private boolean accountNonLocked;
+
+
     private LocalDateTime lastPasswordChange;
+
+
     private LocalDateTime passwordExpiresAt;
 
-    // Número de intentos fallidos de inicio de sesión
+
     private Integer failedLoginAttempts;
 
-    // Set de roles que se asignarán al usuario
+
+    private boolean emailVerified;
+
+
+    private boolean mustChangePassword;
+
+
+    // Roles asociados al usuario (nombres técnicos: ROLE_ADMIN, ROLE_USER, etc.)
     private Set<String> roles;
 }
 

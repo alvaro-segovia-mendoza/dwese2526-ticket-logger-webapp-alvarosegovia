@@ -115,11 +115,8 @@ public class ProvinceMapper {
         if (dto == null || entity == null) return;
         entity.setCode(dto.getCode());
         entity.setName(dto.getName());
-        // Creamos una región vacía y le pasamos solo el ID,
-        // ya que para la actualización de la provincia solo necesitamos el ID de región
         Region region = new Region();
         region.setId(dto.getRegionId());
         entity.setRegion(region);
-        // No tocar entity.setId(...)
     }
 }

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(#{msg.title} + ' - Error')}"></head>
+
+
+<body class="d-flex flex-column h-100">
+<header th:replace="fragments/header :: header"></header>
+
+
+<main class="list-page">
+    <div class="list-card">
+
+
+        <h1 class="mb-2">Ha ocurrido un error</h1>
+
+
+        <div class="alert alert-danger">
+            <strong>Código:</strong> <span th:text="${status}">500</span><br>
+            <strong>Motivo:</strong> <span th:text="${error}">Internal Server Error</span>
+        </div>
+
+
+        <p class="text-muted" th:text="${message}">Mensaje</p>
+
+
+        <div class="small text-muted mt-3">
+            <div><strong>Ruta:</strong> <span th:text="${path}">/ruta</span></div>
+            <div><strong>Fecha:</strong> <span th:text="${timestamp}">timestamp</span></div>
+        </div>
+
+
+        <div class="mt-4 d-flex gap-2">
+            <a class="btn btn-primary" th:href="@{/}">Inicio</a>
+            <a class="btn btn-secondary" href="javascript:history.back()">Volver</a>
+        </div>
+
+
+    </div>
+</main>
+
+
+<footer th:replace="fragments/footer :: footer"></footer>
+<div th:replace="fragments/scripts :: scripts"></div>
+</body>
+</html>

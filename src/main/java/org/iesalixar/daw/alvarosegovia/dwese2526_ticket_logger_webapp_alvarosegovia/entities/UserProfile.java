@@ -84,5 +84,4 @@ public class UserProfile {
         this.bio = bio;
         this.locale = locale;
     }
-
 }
