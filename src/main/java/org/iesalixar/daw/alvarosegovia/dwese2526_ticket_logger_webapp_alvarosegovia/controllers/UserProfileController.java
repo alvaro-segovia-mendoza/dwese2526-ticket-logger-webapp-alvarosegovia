@@ -5,6 +5,7 @@ import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosego
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.exeptions.InvalidFileException;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.exeptions.ResourceNotFoundException;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.services.FileStorageService;
+import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.services.GeminiService;
 import org.iesalixar.daw.alvarosegovia.dwese2526_ticket_logger_webapp_alvarosegovia.services.UserProfileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,9 @@ public class UserProfileController {
     /** Servicio de lógica de negocio para el perfil de usuario */
     @Autowired
     private UserProfileService userProfileService;
+
+    @Autowired
+    private GeminiService geminiService;
 
     /** Servicio encargado del almacenamiento de archivos */
     @Autowired
@@ -201,5 +205,45 @@ public class UserProfileController {
             logger.info("Eliminando imagen anterior de perfil: {}", oldImagePath);
             fileStorageService.deleteFile(oldImagePath);
         }
+    }
+
+    /**
+     * Endpoint encargado de generar automáticamente una biografía profesional
+     * utilizando inteligencia artificial.
+     *
+     * <p>Flujo:</p>
+     * <ol>
+     *     <li>Recibe los datos del formulario {@code UserProfileFormDTO}.</li>
+     *     <li>Construye el nombre completo del usuario.</li>
+     *     <li>Invoca al servicio {@code GeminiService} para generar la biografía.</li>
+     *     <li>Asigna la biografía generada al DTO.</li>
+     *     <li>Devuelve la vista del formulario actualizada.</li>
+     * </ol>
+     *
+     * En caso de error durante la generación, se registra en logs
+     * pero no se interrumpe el flujo de la aplicación.
+     *
+     * @param profileDto DTO con los datos del perfil del usuario.
+     * @param model      Modelo de Spring MVC para enviar datos a la vista.
+     * @return Nombre de la vista que renderiza el formulario de perfil.
+     */
+    @PostMapping("/generate-bio")
+    public String generateBio(@ModelAttribute("userProfileForm") UserProfileFormDTO profileDto, Model model) {
+
+        logger.info("Generando biografía por IA para {} {}", profileDto.getFirstName(), profileDto.getLastName());
+
+        try {
+            String fullName =  profileDto.getFirstName() + " " + profileDto.getLastName();
+
+            String generatedBio = geminiService.generateBiography(fullName, "profesional entusiasta");
+
+            profileDto.setBio(generatedBio);
+
+        } catch (Exception ex) {
+            logger.error("Error al generar biografía: {}", ex.getMessage());
+        }
+
+        model.addAttribute("userProfileForm", profileDto);
+        return "views/user-profile/user-profile-form";
     }
 }

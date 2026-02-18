@@ -92,8 +92,17 @@
 
                 <!-- Biografía -->
                 <div class="mb-3">
-                    <label for="bio" class="form-label" th:text="#{msg.userProfile.field.bio}"></label>
-                    <textarea id="bio" th:field="*{bio}" class="form-control"></textarea>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label for="bio" class="form-label mb-0" th:text="#{msg.userProfile.field.bio}"></label>
+
+
+                        <button type="submit"
+                                th:formaction="@{/profile/generate-bio}"
+                                class="btn btn-sm btn-outline-secondary">
+                            ✨ <span th:text="#{msg.userProfile.action.generateBio}">Generar con IA</span>
+                        </button>
+                    </div>
+                    <textarea id="bio" th:field="*{bio}" rows="3" class="form-control"></textarea>
                     <div th:if="${#fields.hasErrors('bio')}" class="text-danger" th:errors="*{bio}"></div>
                 </div>
 
